@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESCRIBE PAGES</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/build/index.umd.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6fb;color:#172033}
+.header{background:linear-gradient(135deg,#111827,#2563eb);color:#fff;padding:24px 6%;display:flex;justify-content:space-between;align-items:center;gap:20px;box-shadow:0 5px 25px rgba(0,0,0,.15)}
+.logo-area{display:flex;align-items:center;gap:14px}.logo{width:52px;height:52px;background:#fff;color:#2563eb;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px}.header h1{margin:0;font-size:29px}.header p{margin:5px 0 0;color:#dbeafe;font-size:14px}.developer{text-align:right;color:#dbeafe;font-size:13px;line-height:1.5}.developer strong{color:#fff;font-size:14px}
+.container{width:min(1050px,94%);margin:28px auto 50px}.card{background:#fff;border-radius:18px;padding:25px;margin-bottom:20px;border:1px solid #e2e8f0;box-shadow:0 8px 30px rgba(15,23,42,.06)}
+.card-title{display:flex;align-items:center;gap:14px;margin-bottom:22px}.number{width:42px;height:42px;min-width:42px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}.card-title h2{margin:0;font-size:21px}.card-title p{margin:4px 0 0;color:#64748b;font-size:13px}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}.field{display:block;font-size:14px;font-weight:700;color:#334155}.field input{width:100%;margin-top:7px;padding:13px;border:1px solid #d7dee9;border-radius:10px;outline:none;font-size:14px}.field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.upload-box{display:block;width:100%;padding:40px 20px;text-align:center;border:2px dashed #9db5da;border-radius:17px;background:#f8faff;cursor:pointer;transition:.2s}.upload-box:hover{background:#eff6ff;border-color:#2563eb}.upload-icon{font-size:50px;margin-bottom:10px}.upload-box h3{margin:5px 0;font-size:19px}.upload-box p{color:#64748b;margin:7px 0}.upload-box small{color:#94a3b8}
+.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin:18px 0}.image-card{position:relative;overflow:hidden;border-radius:12px;border:1px solid #dbe2ec;background:#f8fafc}.image-card img{display:block!important;width:100%!important;height:180px!important;object-fit:contain!important;background:#f1f5f9}.remove-image{position:absolute;top:7px;right:7px;width:31px;height:31px;padding:0;border-radius:50%;border:none;background:#ef4444;color:#fff;font-size:19px;cursor:pointer;z-index:2}.file-list{margin-top:14px}.file-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:8px;background:#f8fafc;border:1px solid #dbe2ec;border-radius:10px;font-size:13px}.file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-remove{background:#fee2e2;color:#b91c1c;padding:7px 10px}
+button{border:none;border-radius:10px;padding:12px 17px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}button:hover{transform:translateY(-1px)}button:disabled{opacity:.6;cursor:not-allowed}.primary{background:#2563eb;color:#fff}.primary:hover{background:#1d4ed8}.full{width:100%;margin-top:8px}.secondary{background:#eaf0f9;color:#1e293b}
+.status{min-height:22px;margin-top:12px;text-align:center;color:#2563eb;font-weight:700;font-size:14px}.question-tools{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:17px}.question-tools button{background:#eef4ff;color:#1d4ed8;border:1px solid #d6e3ff}.question{background:#f8fafc;border:1px solid #dce3ee;border-radius:14px;padding:16px;margin-bottom:12px}.question-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.question-label{color:#2563eb;font-weight:800;font-size:14px}.delete{background:#fee2e2;color:#b91c1c;padding:7px 10px}.question textarea{width:100%;min-height:75px;resize:vertical;border:1px solid #d7dee9;border-radius:10px;padding:11px;font-family:Arial;font-size:14px;outline:none}.options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.options input{width:100%;padding:11px;border:1px solid #d7dee9;border-radius:9px}
+.paper{background:#fff;color:#111;border:1px solid #d5dbe5;border-radius:8px;padding:38px;min-height:650px}.paper-header{text-align:center;border-bottom:2px solid #111;padding-bottom:13px;margin-bottom:16px}.paper-header h1{margin:0;font-size:26px;text-transform:uppercase}.paper-header h2{margin:6px 0;font-size:19px}.paper-header p{margin:4px 0;font-size:14px}.exam-info{display:flex;justify-content:space-between;margin:13px 0;font-size:14px}.paper-question{margin:10px 0;font-size:14px;line-height:1.55}.paper-options{margin-left:20px;margin-top:4px;font-size:13px}.empty{min-height:520px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#94a3b8}.empty-icon{font-size:60px;margin-bottom:12px}.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-bottom:35px}.actions button{min-width:190px}footer{background:#fff;border-top:1px solid #e2e8f0;text-align:center;padding:25px;color:#64748b;font-size:13px;line-height:1.7}footer strong{color:#172033;font-size:15px}
+.voice-card{border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fbff,#fff)}
+.voice-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.voice-controls button{min-width:180px}.voice-live{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:13px}.voice-dot{width:10px;height:10px;border-radius:50%;background:#94a3b8}.voice-dot.live{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.12);animation:pulse 1s infinite}.voice-transcript{margin-top:10px;padding:12px;border:1px solid #dbe2ec;border-radius:10px;background:#fff;min-height:48px;color:#334155;font-size:14px}.voice-help{margin-top:10px;color:#64748b;font-size:12px;line-height:1.6}@keyframes pulse{50%{opacity:.45}}
+@media(max-width:700px){.header{flex-direction:column;align-items:flex-start;padding:20px}.developer{text-align:left}.form-grid{grid-template-columns:1fr}.options{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.paper{padding:20px}.actions{flex-direction:column}.actions button{width:100%}}
+@media print{body{background:#fff}.header,.card:not(.preview-card),.actions,footer{display:none!important}.container{width:100%;margin:0}.preview-card{padding:0;margin:0;border:none;box-shadow:none}.paper{border:none;box-shadow:none;padding:20px}}
+</style>
+</head>
+<body>
+<header class="header"><div class="logo-area"><div class="logo">📄</div><div><h1>DESCRIBE PAGES</h1><p>AI School Paper Maker</p></div></div><div class="developer">Developed by<br><strong>Vineet Sharma</strong></div></header>
+<main class="container">
+<section class="card"><div class="card-title"><div class="number">1</div><div><h2>Paper Details</h2><p>Enter your examination details</p></div></div><div class="form-grid">
+<label class="field">School Name<input id="schoolName" type="text" placeholder="Enter school name"></label>
+<label class="field">Session<input id="session" type="text" value="2026–27"></label>
+<label class="field">Class<input id="className" type="text" placeholder="Example: 4th"></label>
+<label class="field">Subject<input id="subject" type="text" placeholder="Example: Computer"></label>
+<label class="field">Time<input id="examTime" type="text" placeholder="Example: 2 Hours"></label>
+<label class="field">Maximum Marks<input id="maxMarks" type="text" placeholder="Example: 40"></label>
+</div></section>
+
+<section class="card voice-card">
+  <div class="card-title"><div class="number">🎙️</div><div><h2>Voice Paper Maker</h2><p>Bolkar paper details aur questions set karo</p></div></div>
+  <div class="voice-controls">
+    <button id="voiceStart" class="primary" type="button">🎙️ Start Voice</button>
+    <button id="voiceStop" class="secondary" type="button" disabled>⏹ Stop</button>
+    <select id="voiceLanguage" style="padding:12px;border:1px solid #d7dee9;border-radius:10px;font-size:14px;background:white;">
+      <option value="hi-IN">Hindi / Hinglish</option>
+      <option value="en-IN">English (India)</option>
+      <option value="en-US">English (US)</option>
+    </select>
+  </div>
+  <div class="voice-live"><span id="voiceDot" class="voice-dot"></span><span id="voiceStatus">Voice ready. “Start Voice” dabao.</span></div>
+  <div id="voiceTranscript" class="voice-transcript">Aap jo bologe, yahan dikhega.</div>
+  <div class="voice-help"><b>Examples:</b> “School name ABC Public School”, “class fourth”, “subject computer”, “time two hours”, “maximum marks forty”, “add question what is a computer”, “add MCQ what is CPU”, “add true false computer is an electronic machine”, “update preview”, “extract questions”, “print paper”.</div>
+</section>
+<section class="card"><div class="card-title"><div class="number">2</div><div><h2>Upload Your Paper</h2><p>Upload photos of your existing question paper</p></div></div>
+<label class="upload-box" for="paperImages"><div class="upload-icon">📷</div><h3>Upload Paper Images</h3><p>Click here to choose your question-paper photos</p><small>JPG, JPEG or PNG • Multiple images supported</small></label>
+<input id="paperImages" type="file" accept="image/*" multiple style="display:none">
+<div id="fileList" class="file-list"></div><div id="imagePreview" class="image-grid"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+<label class="field" style="font-size:13px;">
+  OCR Language
+  <select id="ocrLanguage" style="width:100%;margin-top:7px;padding:12px;border:1px solid #d7dee9;border-radius:10px;font-size:14px;background:white;">
+    <option value="eng">English</option>
+    <option value="hin">Hindi</option>
+    <option value="eng+hin">English + Hindi</option>
+  </select>
+</label>
+<label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #d7dee9;border-radius:10px;background:#f8fafc;margin-top:20px;font-size:13px;font-weight:700;cursor:pointer;">
+  <input id="handwritingMode" type="checkbox" checked style="width:18px;height:18px;accent-color:#2563eb;">
+  ✍️ Smart Handwriting Mode
+</label>
+</div>
+<button id="extractBtn" class="primary full" type="button">🔍 Extract Questions</button>
+<div id="ocrStatus" class="status"></div>
+<div style="font-size:12px;color:#64748b;text-align:center;margin-top:4px;">Smart mode cleans the photo, enlarges the writing, removes uneven background, tries multiple OCR layouts and keeps the strongest reading. Clear photos work best.</div>
+</section>
+<section class="card"><div class="card-title"><div class="number">3</div><div><h2>Questions</h2><p>Edit extracted questions or add new ones</p></div></div><div class="question-tools">
+<button type="button" onclick="addQuestion('mcq')">+ MCQ</button><button type="button" onclick="addQuestion('fill')">+ Fill in the Blank</button><button type="button" onclick="addQuestion('tf')">+ True / False</button><button type="button" onclick="addQuestion('short')">+ Short Answer</button>
+</div><div id="questionsContainer"></div></section>
+<section class="card preview-card"><div class="card-title"><div class="number">4</div><div><h2>Paper Preview</h2><p>Check your final question paper</p></div></div><div id="paperPreview" class="paper"><div class="empty"><div class="empty-icon">📄</div><p>Your paper preview will appear here</p></div></div></section>
+<div class="actions"><button class="primary" type="button" onclick="updatePreview()">👀 Update Preview</button><button class="secondary" type="button" onclick="printPaper()">🖨️ Print / Save PDF</button><button class="secondary" type="button" onclick="downloadWord()">📄 Download Word</button></div>
+</main>
+<footer><strong>DESCRIBE PAGES</strong><br>AI School Paper Maker<br>Developed by Vineet Sharma</footer>
+<script>
+'use strict';
+
+let uploadedFiles = [];
+let questions = [];
+
+const $ = id => document.getElementById(id);
+const imageInput = $('paperImages');
+const imagePreview = $('imagePreview');
+const fileList = $('fileList');
+const extractBtn = $('extractBtn');
+const ocrStatus = $('ocrStatus');
+const questionsContainer = $('questionsContainer');
+const paperPreview = $('paperPreview');
+
+/* ---------------- Upload + preview ---------------- */
+imageInput.addEventListener('change', event => {
+  const files = Array.from(event.target.files || []).filter(file => file.type.startsWith('image/'));
+  if (!files.length) return;
+  uploadedFiles.push(...files);
+  imageInput.value = '';
+  renderUploadedImages();
+});
+
+function renderUploadedImages() {
+  imagePreview.innerHTML = '';
+  fileList.innerHTML = '';
+
+  uploadedFiles.forEach((file, index) => {
+    const row = document.createElement('div');
+    row.className = 'file-item';
+
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.textContent = `📄 ${file.name}`;
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'file-remove';
+    remove.textContent = 'Remove';
+    remove.onclick = () => removeImage(index);
+
+    row.append(name, remove);
+    fileList.appendChild(row);
+
+    const card = document.createElement('div');
+    card.className = 'image-card';
+
+    const img = document.createElement('img');
+    img.alt = file.name;
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    img.onload = () => URL.revokeObjectURL(url);
+
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'remove-image';
+    x.textContent = '×';
+    x.title = 'Remove image';
+    x.onclick = () => removeImage(index);
+
+    card.append(img, x);
+    imagePreview.appendChild(card);
+  });
+
+  updateUploadStatus();
+}
+
+function removeImage(index) {
+  uploadedFiles.splice(index, 1);
+  renderUploadedImages();
+}
+
+function updateUploadStatus() {
+  ocrStatus.textContent = uploadedFiles.length
+    ? `${uploadedFiles.length} image(s) selected.`
+    : '';
+}
+
+/* ---------------- OCR ---------------- */
+extractBtn.addEventListener('click', extractQuestions);
+
+async function extractQuestions() {
+  if (!uploadedFiles.length) {
+    alert('Pehle paper ki image upload karo.');
+    return;
+  }
+  if (typeof Tesseract === 'undefined') {
+    alert('OCR library load nahi hui. Internet connection check karo.');
+    return;
+  }
+
+  const lang = $('ocrLanguage').value;
+  const handwriting = $('handwritingMode').checked;
+  extractBtn.disabled = true;
+  extractBtn.textContent = handwriting ? '✍️ Reading handwriting...' : '⏳ Reading...';
+
+  let allText = '';
+
+  try {
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      if (handwriting) {
+        const variants = await prepareOCRVariants(uploadedFiles[i]);
+        const results = [];
+        const psms = [6, 11, 12];
+
+        for (let v = 0; v < variants.length; v++) {
+          ocrStatus.textContent = `✍️ Page ${i + 1}/${uploadedFiles.length} • scan ${v + 1}/${variants.length}`;
+          results.push(await runOCR(variants[v], lang, psms[v], i));
+        }
+
+        allText += '\n' + pickBestOCR(results).text;
+      } else {
+        ocrStatus.textContent = `🔍 Reading page ${i + 1} of ${uploadedFiles.length}...`;
+        const result = await runOCR(uploadedFiles[i], lang, 6, i);
+        allText += '\n' + result.text;
+      }
+    }
+
+    createQuestionsFromOCR(cleanOCRText(allText));
+    ocrStatus.textContent = `✅ ${questions.length} question(s) extracted.`;
+  } catch (error) {
+    console.error(error);
+    ocrStatus.textContent = '❌ OCR failed.';
+    alert('Image read nahi ho paayi. Photo seedhi, clear aur achhi light mein try karo.');
+  } finally {
+    extractBtn.disabled = false;
+    extractBtn.textContent = '🔍 Extract Questions';
+  }
+}
+
+async function runOCR(image, lang, psm, pageIndex) {
+  const result = await Tesseract.recognize(image, lang, {
+    logger: data => {
+      if (data.status === 'recognizing text') {
+        ocrStatus.textContent = `🔍 Page ${pageIndex + 1} • ${Math.round(data.progress * 100)}%`;
+      }
+    },
+    tessedit_pageseg_mode: String(psm),
+    preserve_interword_spaces: '1'
+  });
+
+  return {
+    text: result.data.text || '',
+    confidence: Number(result.data.confidence || 0)
+  };
+}
+
+function pickBestOCR(results) {
+  return results
+    .map(result => ({ ...result, score: ocrQualityScore(result.text, result.confidence) }))
+    .sort((a, b) => b.score - a.score)[0] || { text: '', confidence: 0 };
+}
+
+function ocrQualityScore(text, confidence) {
+  const chars = text.replace(/\s/g, '').length;
+  const lines = text.split(/\n/).map(x => x.trim()).filter(Boolean).length;
+  const questionHints = (text.match(/\b\d{1,2}[.)\-:]/g) || []).length;
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const weird = (text.match(/[|~`]{2,}/g) || []).length;
+  return confidence + Math.min(chars / 40, 25) + Math.min(words / 15, 20) + Math.min(lines, 15) + questionHints * 5 - weird * 3;
+}
+
+function cleanOCRText(text) {
+  return text
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas conversion failed')), 'image/png', 1);
+  });
+}
+
+function buildOCRCanvas(img, mode) {
+  const maxWidth = 2600;
+  const scale = Math.min(3.2, Math.max(1.7, maxWidth / img.naturalWidth));
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const data = ctx.getImageData(0, 0, w, h);
+  const d = data.data;
+  const gray = new Uint8Array(w * h);
+
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    gray[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+  }
+
+  if (mode === 'enhanced') {
+    for (let p = 0; p < gray.length; p++) {
+      const v = ((gray[p] - 128) * 1.65) + 128;
+      gray[p] = Math.max(0, Math.min(255, v));
+    }
+  }
+
+  if (mode === 'ink') {
+    for (let p = 0; p < gray.length; p++) {
+      const v = gray[p];
+      gray[p] = v < 205 ? Math.max(0, Math.round((v - 205) * 1.35 + 205)) : 255;
+    }
+  }
+
+  if (mode === 'threshold') {
+    let sum = 0;
+    for (const v of gray) sum += v;
+    const mean = sum / gray.length;
+    const threshold = Math.max(145, Math.min(205, mean * 0.92));
+    for (let p = 0; p < gray.length; p++) gray[p] = gray[p] < threshold ? 0 : 255;
+  }
+
+  for (let p = 0, i = 0; p < gray.length; p++, i += 4) {
+    d[i] = d[i + 1] = d[i + 2] = gray[p];
+    d[i + 3] = 255;
+  }
+  ctx.putImageData(data, 0, 0);
+  return canvas;
+}
+
+async function prepareOCRVariants(file) {
+  const img = await loadImage(file);
+  const blobs = [];
+  for (const mode of ['enhanced', 'ink', 'threshold']) {
+    blobs.push(await canvasToBlob(buildOCRCanvas(img, mode)));
+  }
+  return blobs;
+}
+
+function createQuestionsFromOCR(text) {
+  const lines = text.replace(/\r/g, '').split('\n').map(s => s.trim()).filter(s => s.length > 1);
+  questions = [];
+  let type = 'short';
+  let current = null;
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+
+    if (lower.includes('mcq') || (lower.includes('tick') && lower.includes('correct'))) {
+      type = 'mcq';
+      continue;
+    }
+    if (lower.includes('fill in') || lower.includes('fill the blank')) {
+      type = 'fill';
+      continue;
+    }
+    if (lower.includes('true or false') || lower.includes('true/false')) {
+      type = 'tf';
+      continue;
+    }
+
+    const qm = line.match(/^(\d+)\s*[\.\)\-:]\s*(.+)$/);
+    if (qm) {
+      current = { number: Number(qm[1]), type, text: qm[2], options: ['', '', ''] };
+      questions.push(current);
+      continue;
+    }
+
+    const om = line.match(/^\(?([abcABC])\)?[\.\):\-]\s*(.+)$/);
+    if (om && current && current.type === 'mcq') {
+      const n = 'abc'.indexOf(om[1].toLowerCase());
+      if (n >= 0) current.options[n] = om[2];
+      continue;
+    }
+
+    if (current) current.text += ' ' + line;
+  }
+
+  if (!questions.length && text) {
+    questions = [{ number: 1, type: 'short', text: text.substring(0, 2000), options: ['', '', ''] }];
+  }
+
+  normalizeQuestionNumbers();
+  renderQuestions();
+  updatePreview();
+}
+
+/* ---------------- Questions ---------------- */
+function normalizeQuestionNumbers() {
+  questions.forEach((q, i) => q.number = i + 1);
+}
+
+function addQuestion(type) {
+  questions.push({ number: questions.length + 1, type, text: '', options: ['', '', ''] });
+  renderQuestions();
+  updatePreview();
+}
+
+function deleteQuestion(index) {
+  questions.splice(index, 1);
+  normalizeQuestionNumbers();
+  renderQuestions();
+  updatePreview();
+}
+
+function renderQuestions() {
+  questionsContainer.innerHTML = '';
+
+  if (!questions.length) {
+    questionsContainer.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8">No questions yet.</div>';
+    return;
+  }
+
+  questions.forEach((q, i) => {
+    const box = document.createElement('div');
+    box.className = 'question';
+
+    const header = document.createElement('div');
+    header.className = 'question-header';
+
+    const label = document.createElement('span');
+    label.className = 'question-label';
+    label.textContent = `Question ${i + 1} • ${q.type.toUpperCase()}`;
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete';
+    del.textContent = '🗑 Delete';
+    del.onclick = () => deleteQuestion(i);
+
+    header.append(label, del);
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'question-text';
+    textarea.placeholder = 'Write question here...';
+    textarea.value = q.text;
+    textarea.oninput = e => { q.text = e.target.value; updatePreview(); };
+
+    box.append(header, textarea);
+
+    if (q.type === 'mcq') {
+      const options = document.createElement('div');
+      options.className = 'options';
+      ['A', 'B', 'C'].forEach((letter, n) => {
+        const input = document.createElement('input');
+        input.className = 'option-input';
+        input.placeholder = `Option ${letter}`;
+        input.value = q.options[n] || '';
+        input.oninput = e => { q.options[n] = e.target.value; updatePreview(); };
+        options.appendChild(input);
+      });
+      box.appendChild(options);
+    }
+
+    questionsContainer.appendChild(box);
+  });
+}
+
+/* ---------------- Paper preview ---------------- */
+['schoolName', 'session', 'className', 'subject', 'examTime', 'maxMarks'].forEach(id => {
+  $(id).addEventListener('input', updatePreview);
+});
+
+function val(id) { return $(id).value.trim(); }
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function updatePreview() {
+  const school = val('schoolName') || 'SCHOOL NAME';
+  const session = val('session') || '2026–27';
+  const cls = val('className') || '________';
+  const subject = val('subject') || '________';
+  const time = val('examTime') || '________';
+  const marks = val('maxMarks') || '________';
+
+  let html = `
+    <div class="paper-header">
+      <h1>${esc(school)}</h1>
+      <h2>EXAMINATION</h2>
+      <p><b>SESSION ${esc(session)}</b></p>
+      <p><b>SUBJECT – ${esc(subject)} &nbsp; | &nbsp; CLASS – ${esc(cls)}</b></p>
+    </div>
+    <div class="exam-info">
+      <span><b>Time:</b> ${esc(time)}</span>
+      <span><b>M.M:</b> ${esc(marks)}</span>
+    </div>
+    <p><b>Note:</b> All questions are compulsory.</p>`;
+
+  if (!questions.length) {
+    html += '<div class="empty"><div class="empty-icon">📄</div><p>Your questions will appear here.</p></div>';
+  }
+
+  questions.forEach((q, i) => {
+    html += `<div class="paper-question"><b>${i + 1}.</b> ${esc(q.text)}`;
+    if (q.type === 'mcq') {
+      html += `<div class="paper-options">(a) ${esc(q.options[0])} &nbsp;&nbsp;&nbsp; (b) ${esc(q.options[1])} &nbsp;&nbsp;&nbsp; (c) ${esc(q.options[2])}</div>`;
+    } else if (q.type === 'fill') {
+      html += ' &nbsp; __________';
+    } else if (q.type === 'tf') {
+      html += ' &nbsp; (True / False)';
+    }
+    html += '</div>';
+  });
+
+  paperPreview.innerHTML = html;
+}
+
+function printPaper() {
+  updatePreview();
+  setTimeout(() => window.print(), 200);
+}
+
+/* ---------------- Word export ---------------- */
+async function downloadWord() {
+  if (!questions.length) {
+    alert('Pehle questions add ya extract karo.');
+    return;
+  }
+  if (typeof docx === 'undefined') {
+    alert('Word library load nahi hui. Internet check karo.');
+    return;
+  }
+
+  const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+  const children = [];
+
+  children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: val('schoolName') || 'SCHOOL NAME', bold: true, size: 34 })] }));
+  children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'EXAMINATION', bold: true, size: 27 })] }));
+  children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'SESSION ' + (val('session') || '2026–27'), bold: true, size: 22 })] }));
+  children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'SUBJECT – ' + val('subject') + ' | CLASS – ' + val('className'), bold: true, size: 22 })] }));
+  children.push(new Paragraph({ children: [new TextRun({ text: 'Time: ' + (val('examTime') || '________') + '       M.M: ' + (val('maxMarks') || '________'), bold: true })] }));
+  children.push(new Paragraph({ children: [new TextRun({ text: 'Note: All questions are compulsory.', bold: true })] }));
+
+  questions.forEach((q, i) => {
+    children.push(new Paragraph({ children: [new TextRun({ text: `${i + 1}. ${q.text}`, size: 22 })] }));
+    if (q.type === 'mcq') {
+      children.push(new Paragraph({ children: [new TextRun({ text: `(a) ${q.options[0]}     (b) ${q.options[1]}     (c) ${q.options[2]}`, size: 20 })] }));
+    }
+  });
+
+  try {
+    const documentFile = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(documentFile);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'DESCRIBE_PAGES_Paper.docx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    console.error(error);
+    alert('Word file create nahi ho paayi.');
+  }
+}
+
+/* ---------------- Voice paper maker ---------------- */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let voiceRecognition = null;
+let voiceRunning = false;
+let lastFinalTranscript = '';
+
+const voiceStart = $('voiceStart');
+const voiceStop = $('voiceStop');
+const voiceLanguage = $('voiceLanguage');
+const voiceStatus = $('voiceStatus');
+const voiceTranscript = $('voiceTranscript');
+const voiceDot = $('voiceDot');
+
+function setVoiceUI(running, message) {
+  voiceRunning = running;
+  voiceStart.disabled = running;
+  voiceStop.disabled = !running;
+  voiceDot.classList.toggle('live', running);
+  voiceStatus.textContent = message;
+}
+
+function normalizeVoice(text) {
+  return text.toLowerCase().replace(/[“”‘’]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function cleanSpokenValue(value) {
+  return value.replace(/^(hai|है|is|please|pls)\s+/i, '').trim();
+}
+
+function spokenNumber(text) {
+  const map = {
+    zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100,
+    ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, cheh: 6, chhe: 6, saat: 7, aath: 8, nau: 9, das: 10,
+    bees: 20, tees: 30, chaalis: 40, pachaas: 50, saath: 60, sattar: 70, assi: 80, nabbe: 90
+  };
+  const numeric = text.match(/\b\d+\b/);
+  if (numeric) return numeric[0];
+  const words = text.toLowerCase().split(/\s+/);
+  const vals = words.map(w => map[w]).filter(v => v !== undefined);
+  if (vals.length === 1) return String(vals[0]);
+  if (vals.length === 2 && vals[1] === 100) return String(vals[0] * 100);
+  if (vals.length === 2) return String(vals[0] + vals[1]);
+  return '';
+}
+
+function setFieldFromVoice(id, value) {
+  const el = $(id);
+  if (!el) return;
+  el.value = value.trim();
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function addVoiceQuestion(type, text) {
+  text = text.trim();
+  if (!text) return;
+  questions.push({ number: questions.length + 1, type, text, options: ['', '', ''] });
+  renderQuestions();
+  updatePreview();
+}
+
+function processVoiceCommand(raw) {
+  const text = raw.trim();
+  const n = normalizeVoice(text);
+  voiceTranscript.textContent = text;
+  let m;
+
+  if ((m = n.match(/^(school name|school)\s+(.+)/i))) {
+    setFieldFromVoice('schoolName', cleanSpokenValue(m[2]));
+    voiceStatus.textContent = '✅ School name set.';
+    return;
+  }
+  if ((m = n.match(/^(session|academic session)\s+(.+)/i))) {
+    setFieldFromVoice('session', cleanSpokenValue(m[2]).replace(/\b(dash|hyphen)\b/g, '–'));
+    voiceStatus.textContent = '✅ Session set.';
+    return;
+  }
+  if ((m = n.match(/^(class|class name)\s+(.+)/i))) {
+    setFieldFromVoice('className', cleanSpokenValue(m[2]));
+    voiceStatus.textContent = '✅ Class set.';
+    return;
+  }
+  if ((m = n.match(/^(subject|sub)\s+(.+)/i))) {
+    setFieldFromVoice('subject', cleanSpokenValue(m[2]));
+    voiceStatus.textContent = '✅ Subject set.';
+    return;
+  }
+  if ((m = n.match(/^(time|exam time)\s+(.+)/i))) {
+    setFieldFromVoice('examTime', cleanSpokenValue(m[2]));
+    voiceStatus.textContent = '✅ Time set.';
+    return;
+  }
+  if ((m = n.match(/^(maximum marks|max marks|marks)\s+(.+)/i))) {
+    const num = spokenNumber(m[2]);
+    setFieldFromVoice('maxMarks', num || cleanSpokenValue(m[2]));
+    voiceStatus.textContent = '✅ Maximum marks set.';
+    return;
+  }
+
+  if ((m = n.match(/^(add|create)\s+(mcq|multiple choice question)\s+(.+)/i))) {
+    addVoiceQuestion('mcq', m[3]);
+    voiceStatus.textContent = '✅ MCQ added.';
+    return;
+  }
+  if ((m = n.match(/^(add|create)\s+(fill in the blank|fill blank|fill)\s+(.+)/i))) {
+    addVoiceQuestion('fill', m[3]);
+    voiceStatus.textContent = '✅ Fill-in-the-blank added.';
+    return;
+  }
+  if ((m = n.match(/^(add|create)\s+(true false|true or false)\s+(.+)/i))) {
+    addVoiceQuestion('tf', m[3]);
+    voiceStatus.textContent = '✅ True/False added.';
+    return;
+  }
+  if ((m = n.match(/^(add|create)\s+(short question|short answer)\s+(.+)/i))) {
+    addVoiceQuestion('short', m[3]);
+    voiceStatus.textContent = '✅ Short question added.';
+    return;
+  }
+  if ((m = n.match(/^(question|add question)\s+(.+)/i))) {
+    addVoiceQuestion('short', m[2]);
+    voiceStatus.textContent = '✅ Question added.';
+    return;
+  }
+
+  if (/^(paper set|set paper|paper ready|make paper|create paper)$/.test(n)) {
+    updatePreview();
+    voiceStatus.textContent = '✅ Paper preview updated.';
+    return;
+  }
+  if (/^(update preview|preview update|preview)$/.test(n)) {
+    updatePreview();
+    voiceStatus.textContent = '✅ Preview updated.';
+    return;
+  }
+  if (/^(extract|read|read paper|extract questions)$/.test(n)) {
+    extractQuestions();
+    return;
+  }
+  if (/^(print|print paper|save pdf)$/.test(n)) {
+    printPaper();
+    return;
+  }
+  if (/^(stop voice|stop listening)$/.test(n)) {
+    stopVoice();
+    return;
+  }
+
+  /* Unknown spoken text is treated as a question only when it sounds long enough. */
+  if (n.length > 10) {
+    addVoiceQuestion('short', text);
+    voiceStatus.textContent = '📝 Added as a short question.';
+  } else {
+    voiceStatus.textContent = '⚠️ Command samajh nahi aaya.';
+  }
+}
+
+function startVoice() {
+  if (!SpeechRecognition) {
+    alert('Voice input is not supported in this browser. Chrome/Edge mein open karke try karo.');
+    return;
+  }
+
+  if (voiceRecognition) {
+    try { voiceRecognition.abort(); } catch (_) {}
+  }
+
+  lastFinalTranscript = '';
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.lang = voiceLanguage.value;
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.maxAlternatives = 1;
+
+  voiceRecognition.onstart = () => setVoiceUI(true, '🎙️ Listening... bolo.');
+
+  voiceRecognition.onerror = event => {
+    console.error('Voice error:', event.error);
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      setVoiceUI(false, 'Microphone permission allow karo.');
+      alert('Microphone permission allow karo, phir Start Voice dabao.');
+    } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
+      voiceStatus.textContent = 'Voice error: ' + event.error;
+    }
+  };
+
+  voiceRecognition.onend = () => {
+    if (voiceRunning) {
+      setTimeout(() => {
+        if (!voiceRunning) return;
+        try { voiceRecognition.start(); } catch (_) {}
+      }, 250);
+    } else {
+      setVoiceUI(false, 'Voice stopped.');
+    }
+  };
+
+  voiceRecognition.onresult = event => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      const transcript = result[0].transcript.trim();
+      voiceTranscript.textContent = transcript;
+      if (result.isFinal && transcript && transcript !== lastFinalTranscript) {
+        lastFinalTranscript = transcript;
+        processVoiceCommand(transcript);
+      }
+    }
+  };
+
+  try {
+    voiceRecognition.start();
+  } catch (error) {
+    console.error(error);
+    setVoiceUI(false, 'Voice start nahi hua.');
+  }
+}
+
+function stopVoice() {
+  voiceRunning = false;
+  if (voiceRecognition) {
+    try { voiceRecognition.stop(); } catch (_) {}
+  }
+  setVoiceUI(false, 'Voice stopped.');
+}
+
+voiceStart.addEventListener('click', startVoice);
+voiceStop.addEventListener('click', stopVoice);
+
+renderQuestions();
+updatePreview();
+</script>
+</body>
+</html>
