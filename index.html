@@ -416,7 +416,13 @@ async function runOCR(image, lang, psm, pageIndex) {
     });
     ocrWorkers.set(lang, workerPromise);
   }
-  const worker = await ocrWorkers.get(lang);
+  let worker;
+  try {
+    worker = await ocrWorkers.get(lang);
+  } catch (error) {
+    ocrWorkers.delete(lang);
+    throw error;
+  }
   await worker.setParameters({
     tessedit_pageseg_mode: String(psm),
     preserve_interword_spaces: '1'
