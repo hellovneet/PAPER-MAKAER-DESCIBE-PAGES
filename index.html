@@ -108,10 +108,10 @@ body{background:#f6f4f1;color:var(--ink)}
 </label>
 </div>
 <div style="display:flex;gap:14px;flex-wrap:wrap;margin:12px 0;padding:12px;border:1px solid #ead9c9;border-radius:12px;background:#fffaf5;">
-  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;"><input id="autoScanOnUpload" type="checkbox" checked style="accent-color:#b85b22;width:17px;height:17px;"> ⚡ Auto scan after upload</label>
-  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;"><input id="autoFixOCR" type="checkbox" checked style="accent-color:#b85b22;width:17px;height:17px;"> ✨ Auto clean & format OCR text</label>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;"><input id="autoFixOCR" type="checkbox" checked style="accent-color:#b85b22;width:17px;height:17px;"> ✨ Auto-correct scan result</label>
+  <span style="font-size:12px;color:#7c5b45;">Upload ke baad scan tabhi chalega jab tum button dabaaoge.</span>
 </div>
-<button id="extractBtn" class="primary full" type="button">🔍 Extract Questions</button>
+<button id="extractBtn" class="primary full" type="button">🔍 Scan & Auto Fix</button>
 <div id="ocrStatus" class="status" role="status" aria-live="polite"></div>
 <details id="ocrReview" style="margin-top:12px;">
   <summary style="cursor:pointer;font-weight:700;color:#9a4b18;">📝 Review / correct scanned text</summary>
@@ -179,11 +179,7 @@ imageInput.addEventListener('change', event => {
   uploadedFiles.push(...files);
   imageInput.value = '';
   renderUploadedImages();
-  if ($('autoScanOnUpload')?.checked) {
-    ocrStatus.textContent = '📷 Photos added. Automatic scan starting...';
-    // Let the browser finish painting the new thumbnails before OCR begins.
-    setTimeout(() => extractQuestions(), 120);
-  }
+  ocrStatus.textContent = `📷 ${uploadedFiles.length} photo(s) ready. Press “Scan & Auto Fix” when you are ready.`;
 });
 
 function renderUploadedImages() {
@@ -272,11 +268,15 @@ async function extractQuestions() {
         const strips = await prepareHandwritingStrips(file);
         const chunkTexts = [];
         for (let v = 0; v < strips.length; v++) {
-          ocrStatus.textContent = `✍️ Handwriting • page ${i + 1}/${uploadedFiles.length} • area ${v + 1}/${strips.length}`;
-          const candidates = [
-            await runOCR(strips[v], lang, 6, i),
-            await runOCR(strips[v], lang, 11, i)
-          ];
+          ocrStatus.textContent = `✍️ Smart handwriting scan • page ${i + 1}/${uploadedFiles.length} • area ${v + 1}/${strips.length}`;
+          const variants = await prepareHandwritingVariants(strips[v]);
+          const candidates = [];
+          for (let pass = 0; pass < variants.length; pass++) {
+            const layouts = pass === 0 ? [6, 11] : [6];
+            for (const layout of layouts) {
+              candidates.push(await runOCR(variants[pass], lang, layout, i));
+            }
+          }
           const bestStrip = pickBestOCR(candidates);
           if (bestStrip.text.trim()) {
             chunkTexts.push(bestStrip.text.trim());
@@ -364,28 +364,29 @@ function cleanOCRText(text) {
 }
 
 function autoFixOCRText(text) {
-  // Conservative cleanup only: preserve the user's actual words and answers.
+  // Safe automatic repair: normalize OCR artifacts and remove repeated scan lines.
+  // It deliberately does not guess missing words or rewrite a student's answer.
   const seen = new Set();
-  return String(text || '')
-    .normalize('NFKC')
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    .replace(/[‐‑‒–—]/g, '-')
-    .replace(/[•·]/g, ' ')
-    .replace(/[|]/g, 'I')
+  const lines = String(text || '').normalize('NFKC')
+    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/[‐‑‒–—]/g, '-').replace(/[•·]/g, ' ')
     .replace(/[\u00A0\t]+/g, ' ')
     .split(/\r?\n/)
-    .map(line => line.replace(/\s+/g, ' ').trim())
-    .filter(line => {
-      if (!line) return false;
-      const key = line.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
-      if (key.length > 10 && seen.has(key)) return false;
-      if (key.length > 10) seen.add(key);
-      return true;
-    })
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .map(line => line.replace(/\s+/g, ' ').trim());
+  const repaired = [];
+  for (let line of lines) {
+    if (!line) { if (repaired.length && repaired[repaired.length - 1] !== '') repaired.push(''); continue; }
+    line = line.replace(/^[“"']+|[”"']+$/g, '');
+    // Convert common circled numerals and OCR variants into a consistent question prefix.
+    line = line.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/, digit => String('①②③④⑤⑥⑦⑧⑨⑩'.indexOf(digit.trim()) + 1) + '. ');
+    line = line.replace(/^([Qq])\s*[Il|]\s*([0-9]{1,2})\s*[.)-]?\s*/, 'Q$2. ');
+    line = line.replace(/^([0-9]{1,2})\s*[):]\s*/, '$1. ');
+    const key = line.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
+    if (key.length > 10 && seen.has(key)) continue;
+    if (key.length > 10) seen.add(key);
+    repaired.push(line);
+  }
+  return repaired.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function loadImage(file) {
@@ -518,6 +519,17 @@ async function prepareHandwritingStrips(file) {
   return blobs;
 }
 
+async function prepareHandwritingVariants(blob) {
+  const img = await loadImage(blob);
+  const modes = ['original', 'contrast', 'adaptive'];
+  const variants = [];
+  for (const mode of modes) {
+    const canvas = mode === 'original' ? buildOCRCanvas(img, 'original') : buildOCRCanvas(img, mode);
+    variants.push(await canvasToBlob(canvas));
+  }
+  return variants;
+}
+
 function mergeOCRChunks(chunks) {
   const merged = [];
   const normalize = value => value.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
@@ -593,7 +605,7 @@ $('autoFixText')?.addEventListener('click', () => {
   if (!field?.value.trim()) { alert('Pehle scanned text add karein.'); return; }
   field.value = autoFixOCRText(field.value);
   createQuestionsFromOCR(field.value);
-  $('ocrStatus').textContent = '✨ Text cleanup complete. Questions ko ek baar review kar lein.';
+  $('ocrStatus').textContent = '✨ OCR cleanup applied. Please review uncertain handwriting before printing.';
   scheduleDraftSave();
 });
 
