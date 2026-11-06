@@ -107,13 +107,20 @@ body{background:#f6f4f1;color:var(--ink)}
   ✍️ Smart Handwriting Mode
 </label>
 </div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;margin:12px 0;padding:12px;border:1px solid #ead9c9;border-radius:12px;background:#fffaf5;">
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;"><input id="autoScanOnUpload" type="checkbox" checked style="accent-color:#b85b22;width:17px;height:17px;"> ⚡ Auto scan after upload</label>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;"><input id="autoFixOCR" type="checkbox" checked style="accent-color:#b85b22;width:17px;height:17px;"> ✨ Auto clean & format OCR text</label>
+</div>
 <button id="extractBtn" class="primary full" type="button">🔍 Extract Questions</button>
 <div id="ocrStatus" class="status" role="status" aria-live="polite"></div>
 <details id="ocrReview" style="margin-top:12px;">
   <summary style="cursor:pointer;font-weight:700;color:#9a4b18;">📝 Review / correct scanned text</summary>
   <p style="font-size:12px;color:#64748b;margin:8px 0;">OCR text yahan check karein. Galat words correct karke neeche button dabayein.</p>
   <textarea id="ocrTextOutput" rows="9" style="width:100%;padding:12px;border:1px solid #d7dee9;border-radius:10px;font:14px/1.5 inherit;resize:vertical;" placeholder="Scanned text will appear here..."></textarea>
-  <button id="rebuildFromOCR" type="button" class="secondary" style="margin-top:8px;">↻ Rebuild questions from corrected text</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+    <button id="autoFixText" type="button" class="secondary">✨ Auto-fix spacing & formatting</button>
+    <button id="rebuildFromOCR" type="button" class="secondary">↻ Rebuild questions from corrected text</button>
+  </div>
 </details>
 <div style="font-size:12px;color:#64748b;text-align:center;margin-top:4px;">Smart mode cleans the photo, enlarges the writing, removes uneven background, tries multiple OCR layouts and keeps the strongest reading. Clear photos work best.</div>
 </section>
@@ -172,6 +179,11 @@ imageInput.addEventListener('change', event => {
   uploadedFiles.push(...files);
   imageInput.value = '';
   renderUploadedImages();
+  if ($('autoScanOnUpload')?.checked) {
+    ocrStatus.textContent = '📷 Photos added. Automatic scan starting...';
+    // Let the browser finish painting the new thumbnails before OCR begins.
+    setTimeout(() => extractQuestions(), 120);
+  }
 });
 
 function renderUploadedImages() {
@@ -291,8 +303,9 @@ async function extractQuestions() {
       totalConfidence += pageConfidence;
     }
 
-    const cleaned = cleanOCRText(allText);
-    if (!cleaned) throw new Error('No text detected in uploaded images');
+    const rawCleaned = cleanOCRText(allText);
+    if (!rawCleaned) throw new Error('No text detected in uploaded images');
+    const cleaned = $('autoFixOCR')?.checked ? autoFixOCRText(rawCleaned) : rawCleaned;
     createQuestionsFromOCR(cleaned);
     const averageConfidence = Math.round(totalConfidence / uploadedFiles.length);
     ocrStatus.textContent = `✅ Scan complete • ${questions.length} question(s) found • OCR confidence approx. ${averageConfidence}% • Please review the extracted text.`;
@@ -346,6 +359,31 @@ function cleanOCRText(text) {
   return text
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
     .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function autoFixOCRText(text) {
+  // Conservative cleanup only: preserve the user's actual words and answers.
+  const seen = new Set();
+  return String(text || '')
+    .normalize('NFKC')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[‐‑‒–—]/g, '-')
+    .replace(/[•·]/g, ' ')
+    .replace(/[|]/g, 'I')
+    .replace(/[\u00A0\t]+/g, ' ')
+    .split(/\r?\n/)
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(line => {
+      if (!line) return false;
+      const key = line.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
+      if (key.length > 10 && seen.has(key)) return false;
+      if (key.length > 10) seen.add(key);
+      return true;
+    })
+    .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -549,6 +587,15 @@ function createQuestionsFromOCR(text) {
   renderQuestions();
   updatePreview();
 }
+
+$('autoFixText')?.addEventListener('click', () => {
+  const field = $('ocrTextOutput');
+  if (!field?.value.trim()) { alert('Pehle scanned text add karein.'); return; }
+  field.value = autoFixOCRText(field.value);
+  createQuestionsFromOCR(field.value);
+  $('ocrStatus').textContent = '✨ Text cleanup complete. Questions ko ek baar review kar lein.';
+  scheduleDraftSave();
+});
 
 $('rebuildFromOCR')?.addEventListener('click', () => {
   const text = $('ocrTextOutput')?.value || '';
