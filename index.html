@@ -23,6 +23,43 @@ button{border:none;border-radius:10px;padding:12px 17px;font-size:14px;font-weig
 .voice-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.voice-controls button{min-width:180px}.voice-live{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:13px}.voice-dot{width:10px;height:10px;border-radius:50%;background:#94a3b8}.voice-dot.live{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.12);animation:pulse 1s infinite}.voice-transcript{margin-top:10px;padding:12px;border:1px solid #dbe2ec;border-radius:10px;background:#fff;min-height:48px;color:#334155;font-size:14px}.voice-help{margin-top:10px;color:#64748b;font-size:12px;line-height:1.6}@keyframes pulse{50%{opacity:.45}}
 @media(max-width:700px){.header{flex-direction:column;align-items:flex-start;padding:20px}.developer{text-align:left}.form-grid{grid-template-columns:1fr}.options{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.paper{padding:20px}.actions{flex-direction:column}.actions button{width:100%}}
 @media print{body{background:#fff}.header,.card:not(.preview-card),.actions,footer{display:none!important}.container{width:100%;margin:0}.preview-card{padding:0;margin:0;border:none;box-shadow:none}.paper{border:none;box-shadow:none;padding:20px}}
+
+/* Complete paper-maker upgrade */
+:root{--ink:#172033;--muted:#64748b;--accent:#b85c24;--line:#e5e7eb}
+body{background:#f6f4f1;color:var(--ink)}
+.header{background:linear-gradient(120deg,#191919,#3a302b);border-bottom:3px solid #c7773f}
+.logo{color:#9b4d20;border-radius:15px}
+.number{background:#9b4d20}
+.primary{background:#9b4d20}.primary:hover{background:#7f3d19}
+.field input:focus{border-color:#b85c24;box-shadow:0 0 0 3px rgba(184,92,36,.12)}
+.card{border-radius:16px;box-shadow:0 8px 26px rgba(30,25,20,.045)}
+.builder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.section-config{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.section-config label{font-size:12px;color:#64748b;font-weight:700}
+.section-config input,.builder-select{width:100%;margin-top:6px;padding:10px;border:1px solid #d7dee9;border-radius:9px;background:#fff}
+.draft-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid #ead8c9;background:#fffaf6;border-radius:12px;margin-top:15px}
+.draft-state{font-size:12px;color:#64748b}
+.question-meta{display:grid;grid-template-columns:1fr 100px;gap:10px;margin:10px 0}
+.question-meta select,.question-meta input,.question .hindi-text{width:100%;padding:10px;border:1px solid #d7dee9;border-radius:9px;background:#fff}
+.question .hindi-text{min-height:55px;margin-top:9px;resize:vertical}
+.question small{display:block;color:#64748b;margin:7px 0 2px;font-size:11px}
+.marks-summary{font-weight:800;color:#9b4d20}
+.paper{font-family:Georgia,'Noto Serif Devanagari',serif;border:1px solid #cbd5e1;box-shadow:0 8px 28px rgba(15,23,42,.06)}
+.paper-header{border-bottom:2px solid #222}
+.paper-section{margin-top:22px;break-inside:avoid}
+.paper-section-title{font-size:16px;font-weight:800;text-transform:uppercase;border-bottom:1px solid #444;padding:7px 0;margin-bottom:10px}
+.paper-question{display:flex;gap:8px;justify-content:space-between;break-inside:avoid}
+.paper-question-main{flex:1}
+.paper-question-marks{white-space:nowrap;font-weight:700}
+.paper-hindi{display:block;margin-top:4px;font-family:'Noto Serif Devanagari',serif}
+.paper-total{margin-top:18px;text-align:right;font-weight:800;border-top:1px solid #777;padding-top:8px}
+.paper[data-template="minimal"]{font-family:Arial,sans-serif;border:0;box-shadow:none}
+.paper[data-template="formal"] .paper-header{border:3px double #222;padding:14px}
+.paper[data-template="primary"]{font-family:'Trebuchet MS',Arial,sans-serif}
+@page{size:A4;margin:16mm}
+@media(max-width:700px){.section-config{grid-template-columns:repeat(2,minmax(0,1fr))}.builder-grid{grid-template-columns:1fr}.question-meta{grid-template-columns:1fr 90px}}
+@media print{body{background:#fff}.header,.card:not(.preview-card),.actions,footer{display:none!important}.container{width:100%;margin:0}.preview-card{padding:0;margin:0;border:none;box-shadow:none}.paper{border:none;box-shadow:none;padding:0;min-height:0}.paper-section{break-inside:avoid}}
+
 </style>
 </head>
 <body>
@@ -71,9 +108,41 @@ button{border:none;border-radius:10px;padding:12px 17px;font-size:14px;font-weig
 </label>
 </div>
 <button id="extractBtn" class="primary full" type="button">🔍 Extract Questions</button>
-<div id="ocrStatus" class="status"></div>
+<div id="ocrStatus" class="status" role="status" aria-live="polite"></div>
+<details id="ocrReview" style="margin-top:12px;">
+  <summary style="cursor:pointer;font-weight:700;color:#9a4b18;">📝 Review / correct scanned text</summary>
+  <p style="font-size:12px;color:#64748b;margin:8px 0;">OCR text yahan check karein. Galat words correct karke neeche button dabayein.</p>
+  <textarea id="ocrTextOutput" rows="9" style="width:100%;padding:12px;border:1px solid #d7dee9;border-radius:10px;font:14px/1.5 inherit;resize:vertical;" placeholder="Scanned text will appear here..."></textarea>
+  <button id="rebuildFromOCR" type="button" class="secondary" style="margin-top:8px;">↻ Rebuild questions from corrected text</button>
+</details>
 <div style="font-size:12px;color:#64748b;text-align:center;margin-top:4px;">Smart mode cleans the photo, enlarges the writing, removes uneven background, tries multiple OCR layouts and keeps the strongest reading. Clear photos work best.</div>
 </section>
+
+<section class="card" id="builderSettings">
+  <div class="card-title"><div class="number">⚙</div><div><h2>Paper Builder Settings</h2><p>Sections, marks, templates and automatic draft saving</p></div></div>
+  <div class="builder-grid">
+    <label class="field">Paper template
+      <select id="paperTemplate" class="builder-select">
+        <option value="classic">Classic School</option><option value="formal">Formal Examination</option><option value="minimal">Minimal Clean</option><option value="primary">Primary Classes</option>
+      </select>
+    </label>
+    <label class="field">Default marks per new question
+      <input id="defaultQuestionMarks" type="number" min="0" step="0.5" value="1">
+    </label>
+  </div>
+  <div class="section-config" aria-label="Section headings">
+    <label>Section A<input id="sectionA" value="Section A – Multiple Choice"></label>
+    <label>Section B<input id="sectionB" value="Section B – Fill in the Blanks"></label>
+    <label>Section C<input id="sectionC" value="Section C – True / False"></label>
+    <label>Section D<input id="sectionD" value="Section D – Short Answer"></label>
+  </div>
+  <div class="draft-bar">
+    <div><div class="marks-summary" id="marksSummary">Total question marks: 0</div><div class="draft-state" id="marksValidation">Add questions to calculate the total.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" id="restoreDraft">↩ Restore draft</button><button type="button" class="secondary" id="clearDraft">Clear saved draft</button></div>
+    <span class="draft-state" id="draftStatus" role="status">Draft saving is ready.</span>
+  </div>
+</section>
+
 <section class="card"><div class="card-title"><div class="number">3</div><div><h2>Questions</h2><p>Edit extracted questions or add new ones</p></div></div><div class="question-tools">
 <button type="button" onclick="addQuestion('mcq')">+ MCQ</button><button type="button" onclick="addQuestion('fill')">+ Fill in the Blank</button><button type="button" onclick="addQuestion('tf')">+ True / False</button><button type="button" onclick="addQuestion('short')">+ Short Answer</button>
 </div><div id="questionsContainer"></div></section>
@@ -176,36 +245,61 @@ async function extractQuestions() {
   const lang = $('ocrLanguage').value;
   const handwriting = $('handwritingMode').checked;
   extractBtn.disabled = true;
-  extractBtn.textContent = handwriting ? '✍️ Reading handwriting...' : '⏳ Reading...';
-
+  extractBtn.textContent = '🔍 Scanning pages...';
   let allText = '';
+  let totalConfidence = 0;
 
   try {
     for (let i = 0; i < uploadedFiles.length; i++) {
+      const file = uploadedFiles[i];
+      if (!file.type.startsWith('image/')) continue;
+      ocrStatus.textContent = `Preparing page ${i + 1}/${uploadedFiles.length}...`;
+      let pageText = '';
+      let pageConfidence = 0;
       if (handwriting) {
-        const variants = await prepareOCRVariants(uploadedFiles[i]);
-        const results = [];
-        const psms = [6, 11, 12];
-
-        for (let v = 0; v < variants.length; v++) {
-          ocrStatus.textContent = `✍️ Page ${i + 1}/${uploadedFiles.length} • scan ${v + 1}/${variants.length}`;
-          results.push(await runOCR(variants[v], lang, psms[v], i));
+        const strips = await prepareHandwritingStrips(file);
+        const chunkTexts = [];
+        for (let v = 0; v < strips.length; v++) {
+          ocrStatus.textContent = `✍️ Handwriting • page ${i + 1}/${uploadedFiles.length} • area ${v + 1}/${strips.length}`;
+          const candidates = [
+            await runOCR(strips[v], lang, 6, i),
+            await runOCR(strips[v], lang, 11, i)
+          ];
+          const bestStrip = pickBestOCR(candidates);
+          if (bestStrip.text.trim()) {
+            chunkTexts.push(bestStrip.text.trim());
+            pageConfidence += bestStrip.confidence;
+          }
         }
-
-        allText += '\n' + pickBestOCR(results).text;
+        pageText = mergeOCRChunks(chunkTexts);
+        pageConfidence /= Math.max(strips.length, 1);
       } else {
-        ocrStatus.textContent = `🔍 Reading page ${i + 1} of ${uploadedFiles.length}...`;
-        const result = await runOCR(uploadedFiles[i], lang, 6, i);
-        allText += '\n' + result.text;
+        const variants = await prepareOCRVariants(file);
+        const results = [];
+        const psms = [6, 11, 4, 6];
+        for (let v = 0; v < variants.length; v++) {
+          ocrStatus.textContent = `📖 Page ${i + 1}/${uploadedFiles.length} • image pass ${v + 1}/${variants.length}`;
+          const result = await runOCR(variants[v], lang, psms[v], i);
+          if (result.text.trim()) results.push(result);
+        }
+        const best = pickBestOCR(results);
+        pageText = best.text;
+        pageConfidence = best.confidence;
       }
+      if (!pageText.trim()) throw new Error(`No readable text found on page ${i + 1}`);
+      allText += `\n\n--- Page ${i + 1} ---\n${pageText}`;
+      totalConfidence += pageConfidence;
     }
 
-    createQuestionsFromOCR(cleanOCRText(allText));
-    ocrStatus.textContent = `✅ ${questions.length} question(s) extracted.`;
+    const cleaned = cleanOCRText(allText);
+    if (!cleaned) throw new Error('No text detected in uploaded images');
+    createQuestionsFromOCR(cleaned);
+    const averageConfidence = Math.round(totalConfidence / uploadedFiles.length);
+    ocrStatus.textContent = `✅ Scan complete • ${questions.length} question(s) found • OCR confidence approx. ${averageConfidence}% • Please review the extracted text.`;
   } catch (error) {
-    console.error(error);
-    ocrStatus.textContent = '❌ OCR failed.';
-    alert('Image read nahi ho paayi. Photo seedhi, clear aur achhi light mein try karo.');
+    console.error('OCR scan error:', error);
+    ocrStatus.textContent = '❌ Scanning could not read this image clearly.';
+    alert('Photo se text sahi se read nahi ho paaya. Page ko seedha rakhein, poora page frame mein laayein, shadow/glare hataayein aur dobara scan karein.');
   } finally {
     extractBtn.disabled = false;
     extractBtn.textContent = '🔍 Extract Questions';
@@ -217,12 +311,13 @@ async function runOCR(image, lang, psm, pageIndex) {
     logger: data => {
       if (data.status === 'recognizing text') {
         ocrStatus.textContent = `🔍 Page ${pageIndex + 1} • ${Math.round(data.progress * 100)}%`;
+      } else if (data.status) {
+        ocrStatus.textContent = `⏳ Page ${pageIndex + 1} • ${data.status}...`;
       }
     },
     tessedit_pageseg_mode: String(psm),
     preserve_interword_spaces: '1'
   });
-
   return {
     text: result.data.text || '',
     confidence: Number(result.data.confidence || 0)
@@ -236,12 +331,15 @@ function pickBestOCR(results) {
 }
 
 function ocrQualityScore(text, confidence) {
-  const chars = text.replace(/\s/g, '').length;
-  const lines = text.split(/\n/).map(x => x.trim()).filter(Boolean).length;
-  const questionHints = (text.match(/\b\d{1,2}[.)\-:]/g) || []).length;
-  const words = text.split(/\s+/).filter(Boolean).length;
-  const weird = (text.match(/[|~`]{2,}/g) || []).length;
-  return confidence + Math.min(chars / 40, 25) + Math.min(words / 15, 20) + Math.min(lines, 15) + questionHints * 5 - weird * 3;
+  const trimmed = text.trim();
+  const chars = trimmed.replace(/\s/g, '');
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const useful = (chars.match(/[A-Za-z0-9\u0900-\u097F]/g) || []).length;
+  const replacement = (trimmed.match(/[�□■]/g) || []).length;
+  const lines = trimmed.split(/\n/).filter(line => line.trim()).length;
+  if (!chars.length) return -1;
+  return confidence * 1.5 + Math.min(useful / Math.max(chars.length, 1), 1) * 20
+    + Math.min(words.length, 100) * 0.12 + Math.min(lines, 30) * 0.25 - replacement * 4;
 }
 
 function cleanOCRText(text) {
@@ -269,8 +367,8 @@ function canvasToBlob(canvas) {
 }
 
 function buildOCRCanvas(img, mode) {
-  const maxWidth = 2600;
-  const scale = Math.min(3.2, Math.max(1.7, maxWidth / img.naturalWidth));
+  const maxSide = 2400;
+  const scale = Math.min(2.5, Math.max(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight)));
   const w = Math.max(1, Math.round(img.naturalWidth * scale));
   const h = Math.max(1, Math.round(img.naturalHeight * scale));
   const canvas = document.createElement('canvas');
@@ -279,35 +377,64 @@ function buildOCRCanvas(img, mode) {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);
   ctx.drawImage(img, 0, 0, w, h);
 
   const data = ctx.getImageData(0, 0, w, h);
   const d = data.data;
   const gray = new Uint8Array(w * h);
+  const histogram = new Uint32Array(256);
+  let sum = 0;
 
   for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-    gray[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+    const value = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+    gray[p] = value;
+    histogram[value]++;
+    sum += value;
   }
 
-  if (mode === 'enhanced') {
-    for (let p = 0; p < gray.length; p++) {
-      const v = ((gray[p] - 128) * 1.65) + 128;
-      gray[p] = Math.max(0, Math.min(255, v));
-    }
-  }
-
-  if (mode === 'ink') {
-    for (let p = 0; p < gray.length; p++) {
-      const v = gray[p];
-      gray[p] = v < 205 ? Math.max(0, Math.round((v - 205) * 1.35 + 205)) : 255;
-    }
-  }
-
-  if (mode === 'threshold') {
-    let sum = 0;
-    for (const v of gray) sum += v;
+  if (mode === 'contrast') {
     const mean = sum / gray.length;
-    const threshold = Math.max(145, Math.min(205, mean * 0.92));
+    for (let p = 0; p < gray.length; p++) {
+      gray[p] = Math.max(0, Math.min(255, Math.round((gray[p] - mean) * 1.65 + 190)));
+    }
+  } else if (mode === 'adaptive') {
+    // Local tile thresholding handles shadows and uneven lighting better than one global threshold.
+    const tile = 48;
+    for (let y = 0; y < h; y += tile) {
+      for (let x = 0; x < w; x += tile) {
+        const x2 = Math.min(w, x + tile), y2 = Math.min(h, y + tile);
+        let localSum = 0, count = 0;
+        for (let yy = y; yy < y2; yy += 2) {
+          for (let xx = x; xx < x2; xx += 2) {
+            localSum += gray[yy * w + xx]; count++;
+          }
+        }
+        const threshold = localSum / Math.max(count, 1) - 12;
+        for (let yy = y; yy < y2; yy++) {
+          for (let xx = x; xx < x2; xx++) {
+            const p = yy * w + xx;
+            gray[p] = gray[p] < threshold ? 0 : 255;
+          }
+        }
+      }
+    }
+  } else if (mode === 'otsu') {
+    let weighted = 0;
+    for (let i = 0; i < 256; i++) weighted += i * histogram[i];
+    let backgroundWeight = 0, backgroundSum = 0, bestVariance = -1, threshold = 180;
+    for (let i = 0; i < 256; i++) {
+      backgroundWeight += histogram[i];
+      if (!backgroundWeight) continue;
+      const foregroundWeight = gray.length - backgroundWeight;
+      if (!foregroundWeight) break;
+      backgroundSum += i * histogram[i];
+      const meanB = backgroundSum / backgroundWeight;
+      const meanF = (weighted - backgroundSum) / foregroundWeight;
+      const variance = backgroundWeight * foregroundWeight * (meanB - meanF) ** 2;
+      if (variance > bestVariance) { bestVariance = variance; threshold = i; }
+    }
     for (let p = 0; p < gray.length; p++) gray[p] = gray[p] < threshold ? 0 : 255;
   }
 
@@ -319,16 +446,72 @@ function buildOCRCanvas(img, mode) {
   return canvas;
 }
 
+async function prepareHandwritingStrips(file) {
+  const img = await loadImage(file);
+  const sourceW = img.naturalWidth, sourceH = img.naturalHeight;
+  const bandHeight = Math.min(sourceH, Math.max(420, Math.round(sourceH * 0.30)));
+  const step = Math.max(260, bandHeight - 48);
+  const blobs = [];
+  for (let y = 0; y < sourceH; y += step) {
+    const cropH = Math.min(bandHeight, sourceH - y);
+    if (cropH < 100) continue;
+    const scale = Math.min(2.2, Math.max(1.25, 2200 / sourceW));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(sourceW * scale);
+    canvas.height = Math.round(cropH * scale);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, y, sourceW, cropH, 0, 0, canvas.width, canvas.height);
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = pixels.data;
+    for (let p = 0; p < d.length; p += 4) {
+      const gray = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+      const enhanced = Math.max(0, Math.min(255, (gray - 118) * 1.35 + 178));
+      d[p] = d[p + 1] = d[p + 2] = enhanced;
+      d[p + 3] = 255;
+    }
+    ctx.putImageData(pixels, 0, 0);
+    blobs.push(await canvasToBlob(canvas));
+    if (y + cropH >= sourceH) break;
+  }
+  return blobs;
+}
+
+function mergeOCRChunks(chunks) {
+  const merged = [];
+  const normalize = value => value.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
+  for (const chunk of chunks) {
+    for (const line of chunk.split(/\n+/).map(value => value.trim()).filter(Boolean)) {
+      const key = normalize(line);
+      if (!key) continue;
+      const duplicate = merged.slice(-5).some(previous => {
+        const prior = normalize(previous);
+        return prior === key || (Math.min(prior.length, key.length) > 12 && (prior.includes(key) || key.includes(prior)));
+      });
+      if (!duplicate) merged.push(line);
+    }
+  }
+  return merged.join('\n');
+}
+
 async function prepareOCRVariants(file) {
   const img = await loadImage(file);
+  // Keep the untouched photo as a candidate; aggressive cleanup can erase faint pencil/ink.
+  const modes = ['original', 'contrast', 'adaptive', 'otsu'];
   const blobs = [];
-  for (const mode of ['enhanced', 'ink', 'threshold']) {
-    blobs.push(await canvasToBlob(buildOCRCanvas(img, mode)));
+  for (const mode of modes) {
+    const canvas = mode === 'original' ? buildOCRCanvas(img, 'original') : buildOCRCanvas(img, mode);
+    blobs.push(await canvasToBlob(canvas));
   }
   return blobs;
 }
 
 function createQuestionsFromOCR(text) {
+  const output = $('ocrTextOutput');
+  if (output) output.value = text;
   const lines = text.replace(/\r/g, '').split('\n').map(s => s.trim()).filter(s => s.length > 1);
   questions = [];
   let type = 'short';
@@ -336,45 +519,44 @@ function createQuestionsFromOCR(text) {
 
   for (const line of lines) {
     const lower = line.toLowerCase();
+    if (/\b(mcq|multiple choice|tick the correct)\b/.test(lower)) { type = 'mcq'; continue; }
+    if (/\b(fill in|fill the blank|complete the sentence)\b/.test(lower)) { type = 'fill'; continue; }
+    if (/\b(true or false|true\/false)\b/.test(lower)) { type = 'tf'; continue; }
 
-    if (lower.includes('mcq') || (lower.includes('tick') && lower.includes('correct'))) {
-      type = 'mcq';
-      continue;
-    }
-    if (lower.includes('fill in') || lower.includes('fill the blank')) {
-      type = 'fill';
-      continue;
-    }
-    if (lower.includes('true or false') || lower.includes('true/false')) {
-      type = 'tf';
-      continue;
-    }
-
-    const qm = line.match(/^(\d+)\s*[\.\)\-:]\s*(.+)$/);
+    const normalizedLine = line.replace(/[①②③④⑤⑥⑦⑧⑨⑩]/g, digit => String('①②③④⑤⑥⑦⑧⑨⑩'.indexOf(digit) + 1));
+    const qm = normalizedLine.match(/^(?:q(?:uestion)?\s*)?[（(]?\s*(\d{1,3})\s*[）)]?\s*[.)\-:：]?\s+(.+)$/i)
+      || normalizedLine.match(/^q(?:uestion)?\s*(\d{1,3})\s+(.+)$/i);
     if (qm) {
-      current = { number: Number(qm[1]), type, text: qm[2], options: ['', '', ''] };
+      current = { number: Number(qm[1]), type, text: qm[2].trim(), options: ['', '', '', ''] };
       questions.push(current);
       continue;
     }
 
-    const om = line.match(/^\(?([abcABC])\)?[\.\):\-]\s*(.+)$/);
+    const om = line.match(/^\(?\s*([a-d])\s*\)?\s*[.)\):\-]\s*(.+)$/i);
     if (om && current && current.type === 'mcq') {
-      const n = 'abc'.indexOf(om[1].toLowerCase());
-      if (n >= 0) current.options[n] = om[2];
+      const n = 'abcd'.indexOf(om[1].toLowerCase());
+      if (n >= 0) current.options[n] = om[2].trim();
       continue;
     }
 
     if (current) current.text += ' ' + line;
   }
 
-  if (!questions.length && text) {
-    questions = [{ number: 1, type: 'short', text: text.substring(0, 2000), options: ['', '', ''] }];
+  if (!questions.length && text.trim()) {
+    questions = [{ number: 1, type: 'short', text: text.trim().substring(0, 4000), options: ['', '', '', ''] }];
   }
-
   normalizeQuestionNumbers();
   renderQuestions();
   updatePreview();
 }
+
+$('rebuildFromOCR')?.addEventListener('click', () => {
+  const text = $('ocrTextOutput')?.value || '';
+  if (!text.trim()) { alert('Pehle scanned text add karein.'); return; }
+  createQuestionsFromOCR(cleanOCRText(text));
+  $('ocrStatus').textContent = `✅ Corrected text se ${questions.length} question(s) rebuild hue.`;
+  scheduleDraftSave();
+});
 
 /* ---------------- Questions ---------------- */
 function normalizeQuestionNumbers() {
@@ -782,6 +964,198 @@ voiceStop.addEventListener('click', stopVoice);
 
 renderQuestions();
 updatePreview();
+
+/* ---------------- Complete builder upgrade ---------------- */
+const DRAFT_KEY = 'describe-pages-draft-v2';
+const SECTION_KEYS = ['A','B','C','D'];
+let draftSaveHandle = null;
+
+function getSectionName(key) {
+  const input = $('section' + key);
+  return input && input.value.trim() ? input.value.trim() : 'Section ' + key;
+}
+function ensureQuestionShape(q, index) {
+  q.number = index + 1;
+  q.section = SECTION_KEYS.includes(q.section) ? q.section : ({mcq:'A',fill:'B',tf:'C',short:'D'}[q.type] || 'D');
+  q.marks = Number.isFinite(Number(q.marks)) && Number(q.marks) >= 0 ? Number(q.marks) : Number($('defaultQuestionMarks')?.value || 1);
+  q.hindiText = q.hindiText || '';
+  q.options = Array.isArray(q.options) ? q.options : ['', '', ''];
+  while (q.options.length < 3) q.options.push('');
+}
+function scheduleDraftSave() {
+  clearTimeout(draftSaveHandle);
+  $('draftStatus').textContent = 'Saving draft…';
+  draftSaveHandle = setTimeout(saveDraft, 350);
+}
+function saveDraft() {
+  try {
+    const fields = ['schoolName','session','className','subject','examTime','maxMarks'];
+    const payload = {
+      version:2, savedAt:new Date().toISOString(),
+      fields:Object.fromEntries(fields.map(id=>[id,$(id).value])),
+      questions,
+      sections:Object.fromEntries(SECTION_KEYS.map(k=>[k,$('section'+k).value])),
+      template:$('paperTemplate').value,
+      defaultMarks:$('defaultQuestionMarks').value
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    $('draftStatus').textContent = 'Draft saved automatically · ' + new Date().toLocaleTimeString();
+  } catch (error) {
+    console.warn('Draft save failed', error);
+    $('draftStatus').textContent = 'Could not save draft in this browser.';
+  }
+}
+function restoreDraft(showMessage=true) {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) { if(showMessage) alert('No saved draft found in this browser.'); return false; }
+    const draft = JSON.parse(raw);
+    if (!draft || draft.version !== 2) throw new Error('Unsupported draft version');
+    Object.entries(draft.fields || {}).forEach(([id,value])=>{if($(id)) $(id).value = value ?? '';});
+    Object.entries(draft.sections || {}).forEach(([key,value])=>{if($('section'+key)) $('section'+key).value = value;});
+    questions = Array.isArray(draft.questions) ? draft.questions : [];
+    $('paperTemplate').value = draft.template || 'classic';
+    $('defaultQuestionMarks').value = draft.defaultMarks || '1';
+    renderQuestions(); updatePreview(); updateMarksSummary();
+    $('draftStatus').textContent = 'Draft restored · ' + (draft.savedAt ? new Date(draft.savedAt).toLocaleString() : '');
+    if(showMessage) $('draftStatus').textContent = 'Your last saved draft has been restored.';
+    return true;
+  } catch(error) {
+    console.error(error);
+    if(showMessage) alert('Saved draft could not be restored. It may be damaged.');
+    return false;
+  }
+}
+function updateMarksSummary() {
+  questions.forEach(ensureQuestionShape);
+  const total = questions.reduce((sum,q)=>sum + Number(q.marks || 0),0);
+  $('marksSummary').textContent = 'Total question marks: ' + total;
+  const max = Number(val('maxMarks'));
+  const message = !val('maxMarks') ? 'Enter maximum marks to validate the paper.' :
+    total === max ? '✓ Question marks match maximum marks.' :
+    total < max ? '⚠ ' + (max-total) + ' mark(s) are not allocated.' :
+    '⚠ Question marks exceed maximum marks by ' + (total-max) + '.';
+  $('marksValidation').textContent = message;
+  $('marksValidation').style.color = val('maxMarks') && total !== max ? '#b45309' : '#64748b';
+}
+function renderQuestions() {
+  questionsContainer.innerHTML = '';
+  if (!questions.length) {
+    questionsContainer.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8">No questions yet. Add a question or extract it from an uploaded paper.</div>';
+    updateMarksSummary(); return;
+  }
+  questions.forEach((q,i)=>{
+    ensureQuestionShape(q,i);
+    const box=document.createElement('div'); box.className='question';
+    const header=document.createElement('div'); header.className='question-header';
+    const label=document.createElement('span'); label.className='question-label'; label.textContent='Question '+(i+1)+' · '+q.type.toUpperCase();
+    const del=document.createElement('button'); del.type='button'; del.className='delete'; del.textContent='🗑 Delete'; del.onclick=()=>deleteQuestion(i);
+    header.append(label,del);
+    const textarea=document.createElement('textarea'); textarea.className='question-text'; textarea.placeholder='Write question in English or Hindi…'; textarea.value=q.text||'';
+    textarea.oninput=e=>{q.text=e.target.value;updatePreview();scheduleDraftSave();};
+    const meta=document.createElement('div'); meta.className='question-meta';
+    const section=document.createElement('select'); section.setAttribute('aria-label','Question section');
+    SECTION_KEYS.forEach(key=>{const option=document.createElement('option');option.value=key;option.textContent=getSectionName(key);section.append(option);});
+    section.value=q.section; section.onchange=e=>{q.section=e.target.value;updatePreview();scheduleDraftSave();};
+    const marks=document.createElement('input'); marks.type='number'; marks.min='0'; marks.step='0.5'; marks.value=q.marks; marks.title='Marks for this question'; marks.setAttribute('aria-label','Question marks');
+    marks.oninput=e=>{q.marks=Math.max(0,Number(e.target.value)||0);updatePreview();updateMarksSummary();scheduleDraftSave();};
+    meta.append(section,marks); box.append(header,textarea,meta);
+    const hindiLabel=document.createElement('small'); hindiLabel.textContent='Hindi translation (optional)'; box.append(hindiLabel);
+    const hindi=document.createElement('textarea'); hindi.className='hindi-text'; hindi.placeholder='प्रश्न का हिन्दी अनुवाद यहाँ लिखें…'; hindi.value=q.hindiText||'';
+    hindi.oninput=e=>{q.hindiText=e.target.value;updatePreview();scheduleDraftSave();}; box.append(hindi);
+    if(q.type==='mcq'){
+      const options=document.createElement('div'); options.className='options';
+      ['A','B','C'].forEach((letter,n)=>{const input=document.createElement('input');input.placeholder='Option '+letter;input.value=q.options[n]||'';input.oninput=e=>{q.options[n]=e.target.value;updatePreview();scheduleDraftSave();};options.append(input);});
+      box.append(options);
+    }
+    questionsContainer.append(box);
+  });
+  updateMarksSummary();
+}
+function addQuestion(type) {
+  questions.push({number:questions.length+1,type,text:'',options:['','',''],section:({mcq:'A',fill:'B',tf:'C',short:'D'}[type]||'D'),marks:Number($('defaultQuestionMarks').value)||1,hindiText:''});
+  renderQuestions(); updatePreview(); scheduleDraftSave();
+}
+function addVoiceQuestion(type,text) {
+  if(!text.trim()) return;
+  questions.push({number:questions.length+1,type,text:text.trim(),options:['','',''],section:({mcq:'A',fill:'B',tf:'C',short:'D'}[type]||'D'),marks:Number($('defaultQuestionMarks').value)||1,hindiText:''});
+  renderQuestions(); updatePreview(); scheduleDraftSave();
+}
+function updatePreview() {
+  const school=val('schoolName')||'SCHOOL NAME', session=val('session')||'2026–27';
+  const cls=val('className')||'________', subject=val('subject')||'________';
+  const time=val('examTime')||'________', max=val('maxMarks')||'________';
+  paperPreview.dataset.template=$('paperTemplate').value;
+  let html='<div class="paper-header"><h1>'+esc(school)+'</h1><h2>EXAMINATION</h2><p><b>SESSION '+esc(session)+'</b></p><p><b>SUBJECT – '+esc(subject)+' | CLASS – '+esc(cls)+'</b></p></div>';
+  html+='<div class="exam-info"><span><b>Time:</b> '+esc(time)+'</span><span><b>Maximum Marks:</b> '+esc(max)+'</span></div><p><b>Instructions:</b> All questions are compulsory. Read each question carefully.</p>';
+  if(!questions.length) html+='<div class="empty"><div class="empty-icon">📄</div><p>Your questions will appear here.</p></div>';
+  SECTION_KEYS.forEach(key=>{
+    const items=questions.filter(q=>{ensureQuestionShape(q,questions.indexOf(q));return q.section===key;});
+    if(!items.length)return;
+    html+='<div class="paper-section"><div class="paper-section-title">'+esc(getSectionName(key))+'</div>';
+    items.forEach(q=>{
+      const idx=questions.indexOf(q);
+      html+='<div class="paper-question"><div class="paper-question-main"><b>'+String(idx+1)+'.</b> '+esc(q.text);
+      if(q.hindiText) html+='<span class="paper-hindi" lang="hi">'+esc(q.hindiText)+'</span>';
+      if(q.type==='mcq') html+='<div class="paper-options">(a) '+esc(q.options[0])+' &nbsp;&nbsp; (b) '+esc(q.options[1])+' &nbsp;&nbsp; (c) '+esc(q.options[2])+'</div>';
+      else if(q.type==='fill') html+=' &nbsp; __________';
+      else if(q.type==='tf') html+=' &nbsp; (True / False)';
+      html+='</div><span class="paper-question-marks">['+esc(q.marks)+' Marks]</span></div>';
+    });
+    html+='</div>';
+  });
+  const total=questions.reduce((sum,q)=>sum+Number(q.marks||0),0);
+  html+='<div class="paper-total">Total: '+total+' / '+esc(max)+' Marks</div>';
+  paperPreview.innerHTML=html; updateMarksSummary();
+}
+async function downloadWord() {
+  if(!questions.length){alert('Pehle questions add ya extract karo.');return;}
+  if(typeof docx==='undefined'){alert('Word library load nahi hui. Internet check karo.');return;}
+  const {Document,Packer,Paragraph,TextRun,AlignmentType}=docx;
+  const children=[];
+  const para=(text,opts={})=>new Paragraph({alignment:opts.center?AlignmentType.CENTER:AlignmentType.LEFT,spacing:{after:opts.after??120},children:[new TextRun({text:String(text),bold:!!opts.bold,size:opts.size||22})]});
+  children.push(para(val('schoolName')||'SCHOOL NAME',{center:true,bold:true,size:34}));
+  children.push(para('EXAMINATION',{center:true,bold:true,size:28}));
+  children.push(para('SESSION '+(val('session')||'2026–27'),{center:true,bold:true}));
+  children.push(para('SUBJECT – '+val('subject')+' | CLASS – '+val('className'),{center:true,bold:true}));
+  children.push(para('Time: '+(val('examTime')||'________')+'     Maximum Marks: '+(val('maxMarks')||'________'),{bold:true}));
+  children.push(para('Instructions: All questions are compulsory.',{bold:true}));
+  SECTION_KEYS.forEach(key=>{
+    const items=questions.filter(q=>{ensureQuestionShape(q,questions.indexOf(q));return q.section===key;});
+    if(!items.length)return;
+    children.push(para(getSectionName(key),{bold:true,size:25,after:180}));
+    items.forEach(q=>{
+      const i=questions.indexOf(q);
+      children.push(para((i+1)+'. '+q.text+'   ['+q.marks+' Marks]'));
+      if(q.hindiText) children.push(para(q.hindiText,{size:22}));
+      if(q.type==='mcq') children.push(para('(a) '+(q.options[0]||'')+'     (b) '+(q.options[1]||'')+'     (c) '+(q.options[2]||''),{size:20}));
+      else if(q.type==='fill') children.push(para('Answer: ______________________________'));
+      else if(q.type==='tf') children.push(para('(True / False)'));
+    });
+  });
+  const total=questions.reduce((sum,q)=>sum+Number(q.marks||0),0);
+  children.push(para('Total Marks: '+total+' / '+(val('maxMarks')||'________'),{bold:true}));
+  try{
+    const doc=new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:850,right:850,bottom:850,left:850}}},children}]});
+    const blob=await Packer.toBlob(doc);const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=url;a.download='DESCRIBE_PAGES_'+(val('className')||'Paper').replace(/[^a-z0-9_-]/gi,'_')+'.docx';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(error){console.error(error);alert('Word file create nahi ho paayi.');}
+}
+$('restoreDraft').addEventListener('click',()=>restoreDraft(true));
+$('clearDraft').addEventListener('click',()=>{if(confirm('Saved draft delete kar dein?')){localStorage.removeItem(DRAFT_KEY);$('draftStatus').textContent='Saved draft cleared.';}});
+['schoolName','session','className','subject','examTime','maxMarks','sectionA','sectionB','sectionC','sectionD','paperTemplate','defaultQuestionMarks'].forEach(id=>{
+  const refresh=()=>{if(id.startsWith('section')) renderQuestions();updatePreview();scheduleDraftSave();};
+  $(id).addEventListener('input',refresh);
+  $(id).addEventListener('change',refresh);
+});
+const previousCreateQuestionsFromOCR=createQuestionsFromOCR;
+createQuestionsFromOCR=function(text){previousCreateQuestionsFromOCR(text);questions.forEach((q,i)=>ensureQuestionShape(q,i));renderQuestions();updatePreview();scheduleDraftSave();};
+const previousDeleteQuestion=deleteQuestion;
+deleteQuestion=function(index){previousDeleteQuestion(index);scheduleDraftSave();};
+renderQuestions();
+if(!restoreDraft(false)){updatePreview();}
+
 </script>
 </body>
 </html>
