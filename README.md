@@ -1,6 +1,6 @@
 # DESCRIBE PAGES — School Question Paper Maker
 
-A Vercel-ready, browser-based question paper maker. The app runs as a static HTML application and does not require a backend or paid AI API.
+A Vercel-ready question paper maker with a static browser UI and an optional secure serverless handwriting-recognition endpoint.
 
 ## Existing capabilities
 
@@ -23,9 +23,21 @@ A Vercel-ready, browser-based question paper maker. The app runs as a static HTM
 - Automatic local draft saving, restore and clear controls
 - Existing voice, OCR, image upload, question editing, print and Word workflows retained
 
+## AI handwriting recognition setup
+
+The handwriting scan can use Gemini multimodal vision through the server-side `/api/handwriting` Vercel Function. The API key is never exposed in browser JavaScript.
+
+1. Create a Gemini API key in Google AI Studio.
+2. In Vercel, open this project → Settings → Environment Variables.
+3. Add `GEMINI_API_KEY` with the key as its value for Preview and Production.
+4. Redeploy the latest commit after saving the variable.
+5. Upload a page and press **Scan & Auto Fix**. AI handwriting transcription is attempted first; if unavailable, the existing local Tesseract OCR is used as fallback.
+
+Do not paste the API key into GitHub, `index.html`, or a chat message. Gemini requests send the uploaded image to Google's API for transcription; users should avoid uploading sensitive documents unless they are comfortable with that processing.
+
 ## Run locally
 
-No build step or package installation is required.
+The static UI can be opened without a build step. The AI endpoint requires a Vercel-compatible serverless runtime and the `GEMINI_API_KEY` environment variable.
 
 1. Download or clone this repository.
 2. Open `index.html` in a modern browser, or serve the folder with a local static server.
