@@ -254,21 +254,41 @@ async function extractQuestions() {
       const file = uploadedFiles[i];
       if (!file.type.startsWith('image/')) continue;
       ocrStatus.textContent = `Preparing page ${i + 1}/${uploadedFiles.length}...`;
-      const variants = await prepareOCRVariants(file);
-      const results = [];
-      // Different page layouts help with single-column, multi-column and scattered text.
-      const psms = [6, 11, 4, 6];
-
-      for (let v = 0; v < variants.length; v++) {
-        ocrStatus.textContent = `📖 Page ${i + 1}/${uploadedFiles.length} • image pass ${v + 1}/${variants.length}`;
-        const result = await runOCR(variants[v], lang, psms[v], i);
-        if (result.text.trim()) results.push(result);
+      let pageText = '';
+      let pageConfidence = 0;
+      if (handwriting) {
+        const strips = await prepareHandwritingStrips(file);
+        const chunkTexts = [];
+        for (let v = 0; v < strips.length; v++) {
+          ocrStatus.textContent = `✍️ Handwriting • page ${i + 1}/${uploadedFiles.length} • area ${v + 1}/${strips.length}`;
+          const candidates = [
+            await runOCR(strips[v], lang, 6, i),
+            await runOCR(strips[v], lang, 11, i)
+          ];
+          const bestStrip = pickBestOCR(candidates);
+          if (bestStrip.text.trim()) {
+            chunkTexts.push(bestStrip.text.trim());
+            pageConfidence += bestStrip.confidence;
+          }
+        }
+        pageText = mergeOCRChunks(chunkTexts);
+        pageConfidence /= Math.max(strips.length, 1);
+      } else {
+        const variants = await prepareOCRVariants(file);
+        const results = [];
+        const psms = [6, 11, 4, 6];
+        for (let v = 0; v < variants.length; v++) {
+          ocrStatus.textContent = `📖 Page ${i + 1}/${uploadedFiles.length} • image pass ${v + 1}/${variants.length}`;
+          const result = await runOCR(variants[v], lang, psms[v], i);
+          if (result.text.trim()) results.push(result);
+        }
+        const best = pickBestOCR(results);
+        pageText = best.text;
+        pageConfidence = best.confidence;
       }
-
-      const best = pickBestOCR(results);
-      if (!best.text.trim()) throw new Error(`No readable text found on page ${i + 1}`);
-      allText += `\n\n--- Page ${i + 1} ---\n${best.text}`;
-      totalConfidence += best.confidence;
+      if (!pageText.trim()) throw new Error(`No readable text found on page ${i + 1}`);
+      allText += `\n\n--- Page ${i + 1} ---\n${pageText}`;
+      totalConfidence += pageConfidence;
     }
 
     const cleaned = cleanOCRText(allText);
@@ -426,6 +446,57 @@ function buildOCRCanvas(img, mode) {
   return canvas;
 }
 
+async function prepareHandwritingStrips(file) {
+  const img = await loadImage(file);
+  const sourceW = img.naturalWidth, sourceH = img.naturalHeight;
+  const bandHeight = Math.min(sourceH, Math.max(420, Math.round(sourceH * 0.30)));
+  const step = Math.max(260, bandHeight - 48);
+  const blobs = [];
+  for (let y = 0; y < sourceH; y += step) {
+    const cropH = Math.min(bandHeight, sourceH - y);
+    if (cropH < 100) continue;
+    const scale = Math.min(2.2, Math.max(1.25, 2200 / sourceW));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(sourceW * scale);
+    canvas.height = Math.round(cropH * scale);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, y, sourceW, cropH, 0, 0, canvas.width, canvas.height);
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = pixels.data;
+    for (let p = 0; p < d.length; p += 4) {
+      const gray = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+      const enhanced = Math.max(0, Math.min(255, (gray - 118) * 1.35 + 178));
+      d[p] = d[p + 1] = d[p + 2] = enhanced;
+      d[p + 3] = 255;
+    }
+    ctx.putImageData(pixels, 0, 0);
+    blobs.push(await canvasToBlob(canvas));
+    if (y + cropH >= sourceH) break;
+  }
+  return blobs;
+}
+
+function mergeOCRChunks(chunks) {
+  const merged = [];
+  const normalize = value => value.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, '');
+  for (const chunk of chunks) {
+    for (const line of chunk.split(/\n+/).map(value => value.trim()).filter(Boolean)) {
+      const key = normalize(line);
+      if (!key) continue;
+      const duplicate = merged.slice(-5).some(previous => {
+        const prior = normalize(previous);
+        return prior === key || (Math.min(prior.length, key.length) > 12 && (prior.includes(key) || key.includes(prior)));
+      });
+      if (!duplicate) merged.push(line);
+    }
+  }
+  return merged.join('\n');
+}
+
 async function prepareOCRVariants(file) {
   const img = await loadImage(file);
   // Keep the untouched photo as a candidate; aggressive cleanup can erase faint pencil/ink.
@@ -452,8 +523,9 @@ function createQuestionsFromOCR(text) {
     if (/\b(fill in|fill the blank|complete the sentence)\b/.test(lower)) { type = 'fill'; continue; }
     if (/\b(true or false|true\/false)\b/.test(lower)) { type = 'tf'; continue; }
 
-    const qm = line.match(/^(?:q(?:uestion)?\s*)?\(?\s*(\d{1,3})\s*\)?\s*[.)\-:]\s*(.+)$/i)
-      || line.match(/^q(?:uestion)?\s*(\d{1,3})\s+(.+)$/i);
+    const normalizedLine = line.replace(/[①②③④⑤⑥⑦⑧⑨⑩]/g, digit => String('①②③④⑤⑥⑦⑧⑨⑩'.indexOf(digit) + 1));
+    const qm = normalizedLine.match(/^(?:q(?:uestion)?\\s*)?[（(]?\\s*(\\d{1,3})\\s*[）)]?\\s*[.)\\-:：]?\\s+(.+)$/i)
+      || normalizedLine.match(/^q(?:uestion)?\\s*(\\d{1,3})\\s+(.+)$/i);
     if (qm) {
       current = { number: Number(qm[1]), type, text: qm[2].trim(), options: ['', '', '', ''] };
       questions.push(current);
