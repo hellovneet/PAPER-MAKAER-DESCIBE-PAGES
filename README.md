@@ -58,3 +58,11 @@ Tesseract.js is primarily a printed-text OCR engine. Image preprocessing can imp
 ## License
 
 This project is proprietary software. See [LICENSE](LICENSE) for the full terms.
+
+## Automatic scanning and OCR cleanup
+
+- Optional automatic scan as soon as image uploads finish (enabled by default)
+- Conservative OCR text cleanup for spacing, Unicode punctuation and duplicate lines
+- Manual auto-fix action in the OCR text review panel
+- Automatic cleanup preserves the recognized words; users should review OCR output because it does not infer or rewrite uncertain handwriting
+- Auto scan can be disabled to upload several batches before starting extraction
