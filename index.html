@@ -264,7 +264,22 @@ async function extractQuestions() {
       ocrStatus.textContent = `Preparing page ${i + 1}/${uploadedFiles.length}...`;
       let pageText = '';
       let pageConfidence = 0;
-      if (handwriting) {
+
+      // Prefer multimodal handwriting recognition when the Vercel server endpoint is configured.
+      try {
+        ocrStatus.textContent = `🤖 AI handwriting recognition • page ${i + 1}/${uploadedFiles.length}...`;
+        const aiResult = await recognizeHandwritingWithAI(file, lang, i);
+        if (aiResult.text && aiResult.text.trim()) {
+          pageText = aiResult.text.trim();
+          pageConfidence = Number(aiResult.confidence || 0);
+          ocrStatus.textContent = `✨ AI read page ${i + 1}. Checking and formatting text...`;
+        }
+      } catch (aiError) {
+        console.warn('AI handwriting service unavailable; using local OCR fallback:', aiError);
+        ocrStatus.textContent = `AI service unavailable; using local OCR for page ${i + 1}...`;
+      }
+
+      if (!pageText.trim() && handwriting) {
         const strips = await prepareHandwritingStrips(file);
         const chunkTexts = [];
         for (let v = 0; v < strips.length; v++) {
@@ -317,6 +332,44 @@ async function extractQuestions() {
     extractBtn.disabled = false;
     extractBtn.textContent = '🔍 Extract Questions';
   }
+}
+
+async function fileToAIImage(file) {
+  const img = await loadImage(file);
+  const maxSide = 1800;
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  if (!blob) throw new Error('Could not prepare photo for AI recognition.');
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ mimeType: 'image/jpeg', data: String(reader.result).split(',')[1] });
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function recognizeHandwritingWithAI(file, lang, pageIndex) {
+  const image = await fileToAIImage(file);
+  const response = await fetch('/api/handwriting', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image,
+      language: lang,
+      pageNumber: pageIndex + 1
+    })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || `AI service returned ${response.status}`);
+  if (!payload.text) throw new Error('AI did not return readable text.');
+  return payload;
 }
 
 async function runOCR(image, lang, psm, pageIndex) {
