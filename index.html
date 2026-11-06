@@ -239,36 +239,41 @@ async function extractQuestions() {
   const lang = $('ocrLanguage').value;
   const handwriting = $('handwritingMode').checked;
   extractBtn.disabled = true;
-  extractBtn.textContent = handwriting ? '✍️ Reading handwriting...' : '⏳ Reading...';
-
+  extractBtn.textContent = '🔍 Scanning pages...';
   let allText = '';
+  let totalConfidence = 0;
 
   try {
     for (let i = 0; i < uploadedFiles.length; i++) {
-      if (handwriting) {
-        const variants = await prepareOCRVariants(uploadedFiles[i]);
-        const results = [];
-        const psms = [6, 11, 12];
+      const file = uploadedFiles[i];
+      if (!file.type.startsWith('image/')) continue;
+      ocrStatus.textContent = `Preparing page ${i + 1}/${uploadedFiles.length}...`;
+      const variants = await prepareOCRVariants(file);
+      const results = [];
+      // Different page layouts help with single-column, multi-column and scattered text.
+      const psms = [6, 11, 4, 6];
 
-        for (let v = 0; v < variants.length; v++) {
-          ocrStatus.textContent = `✍️ Page ${i + 1}/${uploadedFiles.length} • scan ${v + 1}/${variants.length}`;
-          results.push(await runOCR(variants[v], lang, psms[v], i));
-        }
-
-        allText += '\n' + pickBestOCR(results).text;
-      } else {
-        ocrStatus.textContent = `🔍 Reading page ${i + 1} of ${uploadedFiles.length}...`;
-        const result = await runOCR(uploadedFiles[i], lang, 6, i);
-        allText += '\n' + result.text;
+      for (let v = 0; v < variants.length; v++) {
+        ocrStatus.textContent = `📖 Page ${i + 1}/${uploadedFiles.length} • image pass ${v + 1}/${variants.length}`;
+        const result = await runOCR(variants[v], lang, psms[v], i);
+        if (result.text.trim()) results.push(result);
       }
+
+      const best = pickBestOCR(results);
+      if (!best.text.trim()) throw new Error(`No readable text found on page ${i + 1}`);
+      allText += `\n\n--- Page ${i + 1} ---\n${best.text}`;
+      totalConfidence += best.confidence;
     }
 
-    createQuestionsFromOCR(cleanOCRText(allText));
-    ocrStatus.textContent = `✅ ${questions.length} question(s) extracted.`;
+    const cleaned = cleanOCRText(allText);
+    if (!cleaned) throw new Error('No text detected in uploaded images');
+    createQuestionsFromOCR(cleaned);
+    const averageConfidence = Math.round(totalConfidence / uploadedFiles.length);
+    ocrStatus.textContent = `✅ Scan complete • ${questions.length} question(s) found • OCR confidence approx. ${averageConfidence}% • Please review the extracted text.`;
   } catch (error) {
-    console.error(error);
-    ocrStatus.textContent = '❌ OCR failed.';
-    alert('Image read nahi ho paayi. Photo seedhi, clear aur achhi light mein try karo.');
+    console.error('OCR scan error:', error);
+    ocrStatus.textContent = '❌ Scanning could not read this image clearly.';
+    alert('Photo se text sahi se read nahi ho paaya. Page ko seedha rakhein, poora page frame mein laayein, shadow/glare hataayein aur dobara scan karein.');
   } finally {
     extractBtn.disabled = false;
     extractBtn.textContent = '🔍 Extract Questions';
@@ -280,12 +285,13 @@ async function runOCR(image, lang, psm, pageIndex) {
     logger: data => {
       if (data.status === 'recognizing text') {
         ocrStatus.textContent = `🔍 Page ${pageIndex + 1} • ${Math.round(data.progress * 100)}%`;
+      } else if (data.status) {
+        ocrStatus.textContent = `⏳ Page ${pageIndex + 1} • ${data.status}...`;
       }
     },
     tessedit_pageseg_mode: String(psm),
     preserve_interword_spaces: '1'
   });
-
   return {
     text: result.data.text || '',
     confidence: Number(result.data.confidence || 0)
@@ -299,12 +305,15 @@ function pickBestOCR(results) {
 }
 
 function ocrQualityScore(text, confidence) {
-  const chars = text.replace(/\s/g, '').length;
-  const lines = text.split(/\n/).map(x => x.trim()).filter(Boolean).length;
-  const questionHints = (text.match(/\b\d{1,2}[.)\-:]/g) || []).length;
-  const words = text.split(/\s+/).filter(Boolean).length;
-  const weird = (text.match(/[|~`]{2,}/g) || []).length;
-  return confidence + Math.min(chars / 40, 25) + Math.min(words / 15, 20) + Math.min(lines, 15) + questionHints * 5 - weird * 3;
+  const trimmed = text.trim();
+  const chars = trimmed.replace(/\s/g, '');
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const useful = (chars.match(/[A-Za-z0-9\u0900-\u097F]/g) || []).length;
+  const replacement = (trimmed.match(/[�□■]/g) || []).length;
+  const lines = trimmed.split(/\n/).filter(line => line.trim()).length;
+  if (!chars.length) return -1;
+  return confidence * 1.5 + Math.min(useful / Math.max(chars.length, 1), 1) * 20
+    + Math.min(words.length, 100) * 0.12 + Math.min(lines, 30) * 0.25 - replacement * 4;
 }
 
 function cleanOCRText(text) {
@@ -332,8 +341,8 @@ function canvasToBlob(canvas) {
 }
 
 function buildOCRCanvas(img, mode) {
-  const maxWidth = 2600;
-  const scale = Math.min(3.2, Math.max(1.7, maxWidth / img.naturalWidth));
+  const maxSide = 2400;
+  const scale = Math.min(2.5, Math.max(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight)));
   const w = Math.max(1, Math.round(img.naturalWidth * scale));
   const h = Math.max(1, Math.round(img.naturalHeight * scale));
   const canvas = document.createElement('canvas');
@@ -342,35 +351,64 @@ function buildOCRCanvas(img, mode) {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);
   ctx.drawImage(img, 0, 0, w, h);
 
   const data = ctx.getImageData(0, 0, w, h);
   const d = data.data;
   const gray = new Uint8Array(w * h);
+  const histogram = new Uint32Array(256);
+  let sum = 0;
 
   for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-    gray[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+    const value = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+    gray[p] = value;
+    histogram[value]++;
+    sum += value;
   }
 
-  if (mode === 'enhanced') {
-    for (let p = 0; p < gray.length; p++) {
-      const v = ((gray[p] - 128) * 1.65) + 128;
-      gray[p] = Math.max(0, Math.min(255, v));
-    }
-  }
-
-  if (mode === 'ink') {
-    for (let p = 0; p < gray.length; p++) {
-      const v = gray[p];
-      gray[p] = v < 205 ? Math.max(0, Math.round((v - 205) * 1.35 + 205)) : 255;
-    }
-  }
-
-  if (mode === 'threshold') {
-    let sum = 0;
-    for (const v of gray) sum += v;
+  if (mode === 'contrast') {
     const mean = sum / gray.length;
-    const threshold = Math.max(145, Math.min(205, mean * 0.92));
+    for (let p = 0; p < gray.length; p++) {
+      gray[p] = Math.max(0, Math.min(255, Math.round((gray[p] - mean) * 1.65 + 190)));
+    }
+  } else if (mode === 'adaptive') {
+    // Local tile thresholding handles shadows and uneven lighting better than one global threshold.
+    const tile = 48;
+    for (let y = 0; y < h; y += tile) {
+      for (let x = 0; x < w; x += tile) {
+        const x2 = Math.min(w, x + tile), y2 = Math.min(h, y + tile);
+        let localSum = 0, count = 0;
+        for (let yy = y; yy < y2; yy += 2) {
+          for (let xx = x; xx < x2; xx += 2) {
+            localSum += gray[yy * w + xx]; count++;
+          }
+        }
+        const threshold = localSum / Math.max(count, 1) - 12;
+        for (let yy = y; yy < y2; yy++) {
+          for (let xx = x; xx < x2; xx++) {
+            const p = yy * w + xx;
+            gray[p] = gray[p] < threshold ? 0 : 255;
+          }
+        }
+      }
+    }
+  } else if (mode === 'otsu') {
+    let weighted = 0;
+    for (let i = 0; i < 256; i++) weighted += i * histogram[i];
+    let backgroundWeight = 0, backgroundSum = 0, bestVariance = -1, threshold = 180;
+    for (let i = 0; i < 256; i++) {
+      backgroundWeight += histogram[i];
+      if (!backgroundWeight) continue;
+      const foregroundWeight = gray.length - backgroundWeight;
+      if (!foregroundWeight) break;
+      backgroundSum += i * histogram[i];
+      const meanB = backgroundSum / backgroundWeight;
+      const meanF = (weighted - backgroundSum) / foregroundWeight;
+      const variance = backgroundWeight * foregroundWeight * (meanB - meanF) ** 2;
+      if (variance > bestVariance) { bestVariance = variance; threshold = i; }
+    }
     for (let p = 0; p < gray.length; p++) gray[p] = gray[p] < threshold ? 0 : 255;
   }
 
@@ -384,9 +422,12 @@ function buildOCRCanvas(img, mode) {
 
 async function prepareOCRVariants(file) {
   const img = await loadImage(file);
+  // Keep the untouched photo as a candidate; aggressive cleanup can erase faint pencil/ink.
+  const modes = ['original', 'contrast', 'adaptive', 'otsu'];
   const blobs = [];
-  for (const mode of ['enhanced', 'ink', 'threshold']) {
-    blobs.push(await canvasToBlob(buildOCRCanvas(img, mode)));
+  for (const mode of modes) {
+    const canvas = mode === 'original' ? buildOCRCanvas(img, 'original') : buildOCRCanvas(img, mode);
+    blobs.push(await canvasToBlob(canvas));
   }
   return blobs;
 }
