@@ -248,6 +248,76 @@ button:hover{transform:translateY(-1px)}
  .paper{border:0;box-shadow:none;padding:0;min-height:0}
 }
 
+
+/* Premium refinement: layered glass, clearer hierarchy, richer workspace */
+:root{--lime:#d9f27b;--orange:#db8052;--forest:#26372e;--coal:#1f2923;--paper:#f2f1e9}
+body{background:
+ radial-gradient(ellipse at 72% 12%,rgba(218,226,190,.52),transparent 30%),
+ radial-gradient(ellipse at 10% 50%,rgba(228,190,159,.20),transparent 28%),
+ linear-gradient(135deg,#f5f3eb 0%,#eeefe6 54%,#f5f1e9 100%)}
+.studio-topbar{box-shadow:0 8px 24px rgba(24,35,27,.10)}
+.brand-mark{border-radius:11px;box-shadow:0 5px 14px rgba(217,242,123,.16)}
+.save-indicator{padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:30px;background:rgba(255,255,255,.055)}
+.workspace{max-width:1600px;margin:0 auto}
+.workspace-heading{min-height:275px;position:relative;overflow:hidden;padding:48px 0 36px}
+.workspace-heading>div:first-child{position:relative;z-index:2}
+.workspace-heading h1{font-size:clamp(44px,5.4vw,70px);line-height:.94;letter-spacing:-.075em}
+.workspace-heading h1 em{color:#a9613e;font-style:italic}
+.workspace-heading p{max-width:470px;font-size:13px;line-height:1.8}
+.hero-art{width:290px;height:210px;position:relative;display:flex;align-items:center;justify-content:center;margin-right:5%;isolation:isolate}
+.hero-orbit{position:absolute;border:1px solid rgba(93,111,74,.25);border-radius:50%;transform:rotate(-24deg)}
+.orbit-one{width:260px;height:125px}.orbit-two{width:220px;height:170px;transform:rotate(38deg)}
+.hero-paper{width:116px;height:150px;position:relative;z-index:2;padding:16px 13px;background:linear-gradient(145deg,#fffef8,#e6e8d8);border:1px solid rgba(255,255,255,.95);border-radius:5px;box-shadow:12px 18px 35px rgba(47,61,43,.18);transform:rotate(8deg);display:flex;flex-direction:column}
+.hero-paper span{font-size:8px;letter-spacing:.2em;color:#77816a}.hero-paper b{font-size:31px;letter-spacing:-.08em;margin-top:6px;color:#29372c}.hero-paper i{font-style:normal;color:#d37a4d;font-size:19px;margin-top:1px}.hero-paper small{font-size:7px;letter-spacing:.14em;line-height:1.5;margin-top:auto;color:#7c8274}
+.hero-float{position:absolute;z-index:3;padding:10px 13px;background:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.95);backdrop-filter:blur(18px);border-radius:8px;box-shadow:0 8px 25px rgba(45,55,40,.09);font-size:8px;letter-spacing:.13em;color:#66735b}
+.float-top{right:4px;top:23px;color:#a45e3d}.float-bottom{left:0;bottom:22px}.float-bottom i{display:inline-block;width:6px;height:6px;background:#91a85c;border-radius:50%;margin-right:6px}
+.workflow-strip{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:-10px 0 24px;background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.86);border-radius:11px;backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(43,54,39,.045)}
+.workflow-strip a{display:flex;align-items:center;gap:9px;text-decoration:none;color:#70776a;font-size:10px;font-weight:700;white-space:nowrap;transition:.2s}
+.workflow-strip a b{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;background:#e6eadd;color:#526342;font-size:9px}
+.workflow-strip a:hover{color:#a55c39}.workflow-strip a:hover b{background:var(--lime);color:#26372e}
+.workflow-strip>i{height:1px;flex:1;min-width:10px;background:#d9decf}
+.card{border-radius:13px;background:rgba(255,255,251,.82);backdrop-filter:blur(14px);box-shadow:0 8px 25px rgba(39,49,36,.045),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .22s,box-shadow .22s,border-color .22s}
+.card:hover{box-shadow:0 13px 32px rgba(39,49,36,.075),inset 0 1px 0 rgba(255,255,255,.95);border-color:#d4dac7}
+.card-title{position:relative;padding-bottom:13px;border-bottom:1px solid #eceee5}
+.card-title h2{font-size:18px;letter-spacing:-.035em}
+.card-title p{font-size:11px;letter-spacing:.015em}
+.number{border-radius:10px;box-shadow:0 4px 10px rgba(31,41,35,.13)}
+#paperDetails{background:linear-gradient(120deg,rgba(255,255,252,.96),rgba(248,249,239,.85))}
+#uploadPaper{background:linear-gradient(145deg,rgba(255,255,252,.94),rgba(241,244,231,.90))}
+#builderSettings{background:linear-gradient(120deg,#e8ecdf,#f0f1e7)}
+#questionEditor{background:rgba(255,255,251,.88)}
+#paperPreviewSection{background:linear-gradient(145deg,#e9ece3,#f4f3eb)}
+.voice-card{background:linear-gradient(145deg,#26372e,#34473a);box-shadow:0 12px 30px rgba(31,49,37,.16)}
+.voice-card .card-title{border-color:rgba(255,255,255,.13)}
+.voice-card .voice-live{border-radius:8px}
+.voice-card .voice-transcript{border-radius:8px}
+.form-grid{gap:17px}
+.field input{transition:all .2s}
+.field input:hover{border-color:#c5cdb6;background:#fffefa}
+.upload-box{position:relative;overflow:hidden;min-height:178px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.upload-box:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;background:rgba(217,242,123,.17);filter:blur(25px);right:-100px;bottom:-130px;pointer-events:none}
+.upload-box h3{font-size:16px;letter-spacing:-.02em}
+.image-card{box-shadow:0 5px 14px rgba(30,40,29,.06)}
+.question{border-radius:10px;box-shadow:0 3px 12px rgba(39,49,36,.025)}
+.question:focus-within{border-color:#b8c69b;box-shadow:0 0 0 3px rgba(161,184,112,.12)}
+.question-tools button{padding:10px 13px}
+.actions button{min-height:43px}
+.actions .primary{background:var(--orange);color:#fff}
+.actions .primary:hover{background:#bd6941}
+.paper{box-shadow:0 14px 35px rgba(37,43,34,.10);border-color:#d7d9ce}
+.studio-footer{padding:25px 0}
+@media(max-width:700px){
+ .workspace-heading{min-height:0;padding:34px 0 25px}
+ .hero-art{display:none}
+ .workflow-strip{overflow-x:auto;gap:10px;margin:0 0 16px;padding:10px}
+ .workflow-strip>i{min-width:14px}
+ .workflow-strip a{font-size:9px}
+ .workflow-strip a b{width:22px;height:22px}
+ .card:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+@media print{.workflow-strip{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -267,8 +337,12 @@ button:hover{transform:translateY(-1px)}
   <div class="rail-bottom"><div class="rail-tip">✦ <b>Quick tip</b><p>Upload pages first, then scan manually. Review the extracted text before exporting.</p></div><small>VERSION 2.0 · PAPER TO PRINT</small></div>
  </aside>
  <main class="workspace">
-  <div class="workspace-heading"><div><div class="eyebrow">YOUR CREATION SPACE <span></span> 2026—27</div><h1>Build a paper.<br><em>Make it official.</em></h1><p>Set the exam details, bring in questions, and create a print-ready paper.</p></div><div class="heading-stamp">✳<small>CREATE<br>WITH EASE</small></div></div>
-  <div class="container">
+  <div class="workspace-heading"><div><div class="eyebrow">YOUR CREATION SPACE <span></span> 2026—27</div><h1>Build a paper.<br><em>Make it official.</em></h1><p>Set the exam details, bring in questions, and create a print-ready paper.</p></div><div class="hero-art" aria-hidden="true">
+  <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+  <div class="hero-paper"><span>EXAM</span><b>2026</b><i>✳</i><small>QUESTION<br>PAPER</small></div>
+  <div class="hero-float float-top">✦ <b>DESIGN</b></div><div class="hero-float float-bottom"><i></i> READY TO CREATE</div>
+ </div></div>
+  <nav class="workflow-strip" aria-label="Paper creation workflow"><a href="#paperDetails"><b>01</b><span>Set details</span></a><i></i><a href="#uploadPaper"><b>02</b><span>Import pages</span></a><i></i><a href="#questionEditor"><b>03</b><span>Build questions</span></a><i></i><a href="#paperPreviewSection"><b>04</b><span>Export paper</span></a></nav><div class="container">
 <section class="card" id="paperDetails"><div class="card-title"><div class="number">01</div><div><h2>Paper Details</h2><p>Enter your examination details</p></div></div><div class="form-grid">
 <label class="field">School Name<input id="schoolName" type="text" placeholder="Enter school name"></label>
 <label class="field">Session<input id="session" type="text" value="2026–27"></label>
