@@ -1026,8 +1026,9 @@ async function downloadWord() {
 $('restoreDraft').addEventListener('click',()=>restoreDraft(true));
 $('clearDraft').addEventListener('click',()=>{if(confirm('Saved draft delete kar dein?')){localStorage.removeItem(DRAFT_KEY);$('draftStatus').textContent='Saved draft cleared.';}});
 ['schoolName','session','className','subject','examTime','maxMarks','sectionA','sectionB','sectionC','sectionD','paperTemplate','defaultQuestionMarks'].forEach(id=>{
-  $(id).addEventListener('input',()=>{updatePreview();scheduleDraftSave();});
-  $(id).addEventListener('change',()=>{updatePreview();scheduleDraftSave();});
+  const refresh=()=>{if(id.startsWith('section')) renderQuestions();updatePreview();scheduleDraftSave();};
+  $(id).addEventListener('input',refresh);
+  $(id).addEventListener('change',refresh);
 });
 const previousCreateQuestionsFromOCR=createQuestionsFromOCR;
 createQuestionsFromOCR=function(text){previousCreateQuestionsFromOCR(text);questions.forEach((q,i)=>ensureQuestionShape(q,i));renderQuestions();updatePreview();scheduleDraftSave();};
