@@ -9,6 +9,9 @@ A Vercel-ready question paper maker with a static browser UI and an optional sec
 - Voice commands for paper fields, questions, preview, OCR and printing
 - Multiple image uploads with previews and remove controls
 - Tesseract.js OCR with image enlargement, grayscale/contrast and threshold preprocessing
+- Reuses a single Tesseract worker per selected language to avoid repeatedly downloading/reinitializing OCR data
+- Clear scan progress and actionable error messages; Gemini timeout/key/quota errors fall back to local OCR
+- Upload guardrails: up to 10 images, 15 MB per image, and client-side compression before Gemini requests
 - English, Hindi, and English + Hindi OCR options
 - Editable MCQ, fill-in-the-blank, true/false and short-answer questions
 - Browser paper preview, print / Save PDF, and Word export
@@ -65,6 +68,8 @@ Tesseract.js is primarily a printed-text OCR engine. Image preprocessing can imp
 - [ ] Switch all four templates and inspect print preview
 - [ ] Refresh the page and restore the autosaved draft
 - [ ] Test voice input and OCR in a supported browser
+- [ ] Confirm upload only previews images; scanning starts only after pressing Scan & Auto Fix
+- [ ] Test Gemini unavailable / quota exceeded and confirm local OCR fallback with a visible status message
 - [ ] Download and inspect the generated DOCX and print-to-PDF output
 
 ## License
